@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <!-- Placeholder FERMS flame logo mark -->
+  <path d="M20 4 C20 4 10 16 10 26 C10 32 14.5 36 20 36 C25.5 36 30 32 30 26 C30 16 20 4 20 4Z" fill="#FF6A00"/>
+  <path d="M20 16 C20 16 15 23 15 27 C15 29.8 17.2 32 20 32 C22.8 32 25 29.8 25 27 C25 23 20 16 20 16Z" fill="#FFF1E6"/>
+  <text x="38" y="28" font-family="'Bebas Neue',Impact,sans-serif" font-size="24" fill="#1A1814">FERMS</text>
+</svg>

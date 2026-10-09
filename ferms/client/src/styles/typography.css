@@ -1,0 +1,4 @@
+/* typography.css — Global heading and body type scale using --font-display and --font-body tokens */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}

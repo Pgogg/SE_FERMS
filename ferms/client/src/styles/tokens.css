@@ -1,0 +1,47 @@
+/* tokens.css — Design system CSS custom properties: colors, typography, spacing, border-radius, and severity/status tokens */
+:root {
+  /* Brand */
+  --color-brand: #FF6A00;
+  --color-brand-hover: #E55F00;
+  --color-brand-tint: #FFF1E6;
+  --color-brand-text: #C2410C;
+
+  /* Ink / Dark */
+  --color-ink: #111111;
+  --color-dark: #1A1814;
+  --color-dark-2: #25221D;
+
+  /* Backgrounds */
+  --color-bg: #FFFFFF;
+  --color-bg-warm: #F4F2EE;
+  --color-card: #F6F8F8;
+  --color-border: #E7E5E0;
+
+  /* Text */
+  --color-text: #1F1F1F;
+  --color-muted: #6B6B6B;
+
+  /* Severity */
+  --sev-low: #667085;
+  --sev-medium: #F2B705;
+  --sev-high: #D9480F;
+  --sev-critical: #D92D20;
+
+  /* Status */
+  --st-reported: #475467;
+  --st-unassigned: #D92D20;
+  --st-assigned: #2563EB;
+  --st-progress: #FF6A00;
+  --st-resolved: #16A34A;
+  --st-closed: #98A2B3;
+
+  /* Typography */
+  --font-display: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+  --font-body: 'Work Sans', system-ui, sans-serif;
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+}
