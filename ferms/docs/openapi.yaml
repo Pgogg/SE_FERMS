@@ -2,4 +2,2073 @@ openapi: 3.0.3
 info:
   title: FERMS API
   version: 1.0.0
-paths: {}
+  description: >-
+    Fire Emergency Response Management System (FERMS) REST API specification.
+    Follows three-tier PERN architecture with JWT Bearer authentication,
+    standard response envelopes ({ data, meta }), and error envelopes ({ error: { code, message, allowedNext } }).
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Authentication & session management (Feature 4.1)
+  - name: Users
+    description: User and staff administration (Feature 4.7)
+  - name: Incidents
+    description: Incident reporting, dispatch, monitoring, and resolution (Features 4.2, 4.4, 4.5)
+  - name: Stations
+    description: Fire station management (Feature 4.3)
+  - name: Vehicles
+    description: Vehicle fleet management (Feature 4.3)
+  - name: Personnel
+    description: Station personnel duty and assignment (Feature 4.3)
+  - name: Notifications
+    description: In-app notification delivery (Feature 4.6)
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================================
+  # 5.1 Auth (/api/auth) — Owner: Parth
+  # ============================================================================
+  /auth/register:
+    post:
+      operationId: registerCitizen
+      tags:
+        - Auth
+      summary: Register citizen account
+      description: >-
+        Public endpoint for citizen self-registration. Validates unique email,
+        password >= 8 characters, and hashes with bcrypt. Creates a Citizen account only.
+        Requirements: Auth.Register, Auth.Register.Validate, SE-2.
+      x-roles:
+        - public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Citizen registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags:
+        - Auth
+      summary: User login
+      description: >-
+        Public authentication endpoint. Verifies email and password, rejects inactive
+        accounts, and returns a signed 24-hour JWT token along with sanitized user profile.
+        Failed attempts return 401 with generic message 'Invalid email or password'.
+        Requirements: Auth.Login, Auth.Login.Fail, CO-3, SE-3, SE-5.
+      x-roles:
+        - public
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags:
+        - Auth
+      summary: User logout
+      description: >-
+        Invalidates current user session on client. Server responds 200.
+        Requirement: Auth.Logout.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags:
+        - Auth
+      summary: Get current authenticated user profile
+      description: >-
+        Returns profile, role, duty status, and assigned station of currently authenticated user.
+        Requirements: Auth.Login, SE-3.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # ============================================================================
+  # 5.2 Incidents (/api/incidents) — Features 4.2, 4.4, 4.5
+  # ============================================================================
+  /incidents:
+    post:
+      operationId: createIncident
+      tags:
+        - Incidents
+      summary: Report a fire emergency incident
+      description: >-
+        Citizen reports an emergency. Invokes Haversine nearest-station dispatch engine.
+        If an available vehicle exists at an eligible station, assigns station and reserves vehicle
+        (incident_vehicles row + vehicle marked dispatched); otherwise status remains unassigned.
+        Owner: Parth. Requirements: Incident.Report, Incident.Report.Location, Dispatch.Assign.Nearest,
+        Dispatch.Assign.NoStation, Incident.Report.Confirm, SF-1.
+      x-roles:
+        - citizen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIncidentRequest'
+      responses:
+        '201':
+          description: Incident created and assigned or queued as unassigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    get:
+      operationId: listIncidents
+      tags:
+        - Incidents
+      summary: List all incidents for monitoring
+      description: >-
+        List incidents with optional filtering by status and station. Excludes closed
+        incidents by default unless includeClosed=true is specified.
+        Owner: Vedant. Requirements: Monitor.Live, Monitor.Filter.
+      x-roles:
+        - dispatch_operator
+        - station_officer
+        - admin
+      parameters:
+        - name: status
+          in: query
+          description: Filter incidents by status
+          schema:
+            type: string
+            enum: [reported, unassigned, assigned, in_progress, resolved, closed]
+        - name: stationId
+          in: query
+          description: Filter incidents assigned to a specific station
+          schema:
+            type: integer
+        - name: includeClosed
+          in: query
+          description: Include closed incidents when true (default false)
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Filtered list of incidents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentsListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /incidents/mine:
+    get:
+      operationId: listMyIncidents
+      tags:
+        - Incidents
+      summary: List citizen's reported incidents
+      description: >-
+        Returns all incidents reported by the calling citizen (WHERE reporter_id = req.user.id).
+        Owner: Parth. Requirements: Incident.Report, SE-4.
+      x-roles:
+        - citizen
+      responses:
+        '200':
+          description: List of caller's reported incidents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentsListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /incidents/stats:
+    get:
+      operationId: getIncidentStats
+      tags:
+        - Incidents
+      summary: Get aggregate incident counts by status
+      description: >-
+        Returns count of incidents in reported, unassigned, assigned, in_progress, resolved, and closed states.
+        Owner: Vedant. Requirement: Monitor.Count.
+      x-roles:
+        - dispatch_operator
+        - station_officer
+        - admin
+      parameters:
+        - name: stationId
+          in: query
+          description: Optional station filter (Station Officer is scoped to own station)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Incident counts grouped by status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentStatsEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /incidents/assigned:
+    get:
+      operationId: listAssignedIncidents
+      tags:
+        - Incidents
+      summary: List incidents assigned to caller's station
+      description: >-
+        Returns incidents assigned to the caller's station in status assigned, in_progress, and resolved.
+        Owner: Vedant. Requirements: UC-10 step 1.
+      x-roles:
+        - firefighter
+        - station_officer
+      responses:
+        '200':
+          description: Incidents assigned to caller's station
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentsListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /incidents/{id}:
+    get:
+      operationId: getIncidentById
+      tags:
+        - Incidents
+      summary: Get incident details
+      description: >-
+        Full incident view including reporter name, assigned station, status history, field notes,
+        and assigned vehicles. Accessible by the reporter, assigned station staff, dispatch operator, or admin.
+        Owner: Vedant. Requirements: Incident.History, Incident.Log, SE-4.
+      x-roles:
+        - citizen
+        - firefighter
+        - station_officer
+        - dispatch_operator
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      responses:
+        '200':
+          description: Full incident details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentDetailEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /incidents/{id}/assign:
+    patch:
+      operationId: assignIncident
+      tags:
+        - Incidents
+      summary: Manual dispatch override
+      description: >-
+        Reassigns an incident to a specified fire station. Only valid for incidents in status
+        unassigned or assigned (also reported or in_progress; rejected with 400 if resolved or closed).
+        Releases old vehicle(s), reserves a vehicle at the new station, updates station_id, writes history row,
+        and notifies target station personnel.
+        Owner: Parth. Requirements: Dispatch.Override, BR-1, UC-05.
+      x-roles:
+        - dispatch_operator
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignIncidentRequest'
+      responses:
+        '200':
+          description: Incident successfully assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Target station has no available vehicle to reserve
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /incidents/{id}/status:
+    patch:
+      operationId: updateIncidentStatus
+      tags:
+        - Incidents
+      summary: Update incident status
+      description: >-
+        Transitions incident status. In practice moves assigned to in_progress.
+        Transitions to resolved or closed are rejected with 400 pointing to dedicated endpoints.
+        Owner: Vedant. Requirements: Incident.Status.Update, Incident.Status.Invalid, Incident.Status.Transition.
+      x-roles:
+        - firefighter
+        - station_officer
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIncidentStatusRequest'
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /incidents/{id}/notes:
+    post:
+      operationId: addIncidentNote
+      tags:
+        - Incidents
+      summary: Add operational field note
+      description: >-
+        Appends a timestamped field note to an incident. Author must belong to assigned station.
+        Owner: Vedant. Requirement: Incident.Log.
+      x-roles:
+        - firefighter
+        - station_officer
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddIncidentNoteRequest'
+      responses:
+        '201':
+          description: Note appended successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /incidents/{id}/resolve:
+    patch:
+      operationId: resolveIncident
+      tags:
+        - Incidents
+      summary: Resolve incident
+      description: >-
+        Transitions incident from in_progress to resolved. Requires closingSummary. Releases all vehicles
+        associated with this incident (sets released_at to now, vehicle status returned to available).
+        Notifies reporting citizen.
+        Owner: Vedant. Requirements: Incident.Resolve, Vehicle.Status.Auto, BR-5, UC-12.
+      x-roles:
+        - firefighter
+        - station_officer
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveIncidentRequest'
+      responses:
+        '200':
+          description: Incident resolved and vehicles released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /incidents/{id}/close:
+    patch:
+      operationId: closeIncident
+      tags:
+        - Incidents
+      summary: Close resolved incident
+      description: >-
+        Permanently closes an incident. Allowed only from resolved state. Restricted to Station Officer
+        at the incident's station.
+        Owner: Vedant. Requirements: Incident.Close, BR-4.
+      x-roles:
+        - station_officer
+      parameters:
+        - $ref: '#/components/parameters/IncidentIdParam'
+      responses:
+        '200':
+          description: Incident closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # ============================================================================
+  # 5.3 Stations & Resources (/api/stations, /api/vehicles, /api/personnel)
+  # Owner: Vedant
+  # ============================================================================
+  /stations:
+    get:
+      operationId: listStations
+      tags:
+        - Stations
+      summary: List all fire stations
+      description: >-
+        Returns all stations including calculated availableVehicles and onDutyPersonnel counts.
+        Requirements: Resource.Availability, Station.Manage.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      responses:
+        '200':
+          description: List of fire stations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationsListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      operationId: createStation
+      tags:
+        - Stations
+      summary: Create new fire station
+      description: >-
+        Creates a new fire station. Admin only. Requirement: Station.Manage.
+      x-roles:
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStationRequest'
+      responses:
+        '201':
+          description: Station created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /stations/{id}:
+    patch:
+      operationId: updateStation
+      tags:
+        - Stations
+      summary: Update station details
+      description: >-
+        Updates station name, address, coordinates, or contact info. Admin only.
+        Requirement: Station.Manage.
+      x-roles:
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/StationIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStationRequest'
+      responses:
+        '200':
+          description: Station updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /stations/{id}/vehicles:
+    get:
+      operationId: listStationVehicles
+      tags:
+        - Vehicles
+      summary: List vehicles at a station
+      description: >-
+        Returns all vehicles assigned to the specified station. Station Officer is scoped to own station.
+        Requirements: Vehicle.Manage, BR-3.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/StationIdParam'
+      responses:
+        '200':
+          description: List of station vehicles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclesListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /vehicles:
+    post:
+      operationId: createVehicle
+      tags:
+        - Vehicles
+      summary: Register a new vehicle
+      description: >-
+        Adds a new vehicle to a station. Enforces unique registration_no (duplicate returns 409).
+        Requirement: Vehicle.Manage.
+      x-roles:
+        - station_officer
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '201':
+          description: Vehicle created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /vehicles/{id}:
+    patch:
+      operationId: updateVehicle
+      tags:
+        - Vehicles
+      summary: Update vehicle status or details
+      description: >-
+        Manual update of vehicle status (available, maintenance). Dispatched status is system-managed only.
+        Requirement: Vehicle.Manage.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+      responses:
+        '200':
+          description: Vehicle updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      operationId: deleteVehicle
+      tags:
+        - Vehicles
+      summary: Remove vehicle from fleet
+      description: >-
+        Deletes a vehicle record. Blocked with 409 Conflict if currently assigned to an active incident.
+        Requirement: Vehicle.Manage.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      responses:
+        '200':
+          description: Vehicle removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Vehicle is currently dispatched on an active incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /stations/{id}/personnel:
+    get:
+      operationId: listStationPersonnel
+      tags:
+        - Personnel
+      summary: List personnel at a station
+      description: >-
+        Lists all firefighters and station officers assigned to the specified station.
+        Requirements: Personnel.Manage, BR-3.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/StationIdParam'
+      responses:
+        '200':
+          description: List of station personnel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /personnel/{userId}/station:
+    patch:
+      operationId: updatePersonnelStation
+      tags:
+        - Personnel
+      summary: Assign personnel to a station
+      description: >-
+        Assigns or transfers a firefighter or officer to a fire station.
+        Requirement: Personnel.Manage.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/PersonnelUserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonnelStationRequest'
+      responses:
+        '200':
+          description: Personnel station updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /personnel/{userId}/duty:
+    patch:
+      operationId: updatePersonnelDuty
+      tags:
+        - Personnel
+      summary: Set personnel duty status
+      description: >-
+        Updates on_duty boolean flag for station personnel.
+        Requirement: Personnel.Manage.
+      x-roles:
+        - station_officer
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/PersonnelUserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonnelDutyRequest'
+      responses:
+        '200':
+          description: Personnel duty status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # ============================================================================
+  # 5.4 Notifications (/api/notifications) — Owner: Parth
+  # ============================================================================
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags:
+        - Notifications
+      summary: List notifications for current user
+      description: >-
+        Returns notifications for authenticated caller. Supports ?unread=true filter and includes
+        meta.unreadCount in response envelope.
+        Requirement: Notify.InApp.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      parameters:
+        - name: unread
+          in: query
+          description: Filter only unread notifications when true
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Notifications list with unread count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags:
+        - Notifications
+      summary: Mark single notification read
+      description: >-
+        Marks a specific notification read. Caller must be the recipient.
+        Requirement: Notify.InApp.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of notification to mark read
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notification marked read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags:
+        - Notifications
+      summary: Mark all notifications read
+      description: >-
+        Marks all notifications for calling user read.
+        Requirement: Notify.InApp.
+      x-roles:
+        - citizen
+        - dispatch_operator
+        - firefighter
+        - station_officer
+        - admin
+      responses:
+        '200':
+          description: All notifications marked read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # ============================================================================
+  # 5.5 User Management (/api/users) — Owner: Parth
+  # ============================================================================
+  /users:
+    get:
+      operationId: listUsers
+      tags:
+        - Users
+      summary: List all users
+      description: >-
+        Admin overview of user accounts with optional role filtering.
+        Requirement: Admin.User.Manage.
+      x-roles:
+        - admin
+      parameters:
+        - name: role
+          in: query
+          description: Optional filter by user role
+          schema:
+            type: string
+            enum: [citizen, dispatch_operator, firefighter, station_officer, admin]
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersListEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      operationId: createUser
+      tags:
+        - Users
+      summary: Create user account (Admin)
+      description: >-
+        Admin creates an account with any role (citizen, dispatch_operator, firefighter, station_officer, admin).
+        Validates unique email and password >= 8 characters.
+        Requirements: Admin.User.Manage, UC-14 step 2.
+      x-roles:
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminCreateUserRequest'
+      responses:
+        '201':
+          description: User account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags:
+        - Users
+      summary: Update user profile
+      description: >-
+        Admin updates user details such as name, phone, station assignment, or duty status.
+        Requirement: Admin.User.Manage.
+      x-roles:
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags:
+        - Users
+      summary: Change user role
+      description: >-
+        Updates role for a user account. Admin only.
+        Requirements: Admin.User.Role, BR-2.
+      x-roles:
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRoleRequest'
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /users/{id}/deactivate:
+    patch:
+      operationId: deactivateUser
+      tags:
+        - Users
+      summary: Deactivate user account
+      description: >-
+        Sets user account_status to inactive. Rejected with 400 if the target is the caller itself.
+        Requirements: Admin.User.Manage, UC-14 ext. 6a.
+      x-roles:
+        - admin
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: User account deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+# ==============================================================================
+# Components (Schemas, Parameters, Responses, Security)
+# ==============================================================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Standard 24-hour JWT token in Authorization Bearer header
+
+  parameters:
+    IncidentIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the incident
+      schema:
+        type: integer
+        example: 101
+
+    StationIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the station
+      schema:
+        type: integer
+        example: 1
+
+    VehicleIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the vehicle
+      schema:
+        type: integer
+        example: 1
+
+    UserIdParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the user
+      schema:
+        type: integer
+        example: 3
+
+    PersonnelUserIdParam:
+      name: userId
+      in: path
+      required: true
+      description: Numeric ID of the user
+      schema:
+        type: integer
+        example: 3
+
+  responses:
+    BadRequestError:
+      description: Validation error or invalid state transition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    UnauthorizedError:
+      description: Missing, invalid, expired token, deactivated account, or bad credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ForbiddenError:
+      description: Forbidden - caller does not possess required role or station scope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Conflict - duplicate unique value or resource constraint violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # --------------------------------------------------------------------------
+    # Envelope Helpers & Errors
+    # --------------------------------------------------------------------------
+    Meta:
+      type: object
+      required:
+        - count
+      properties:
+        count:
+          type: integer
+          description: Total count of items in the list
+          example: 12
+
+    NotificationMeta:
+      type: object
+      required:
+        - count
+        - unreadCount
+      properties:
+        count:
+          type: integer
+          description: Total count of notifications returned
+          example: 8
+        unreadCount:
+          type: integer
+          description: Count of unread notifications for the caller
+          example: 3
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - INVALID_TRANSITION
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+              example: INVALID_TRANSITION
+            message:
+              type: string
+              example: Cannot move from assigned to resolved.
+            allowedNext:
+              type: array
+              items:
+                type: string
+              description: Next allowed status values if an invalid state transition was attempted
+              example:
+                - in_progress
+
+    MessageEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              example: Operation completed successfully.
+
+    # --------------------------------------------------------------------------
+    # Core Domain Entities
+    # --------------------------------------------------------------------------
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - role
+        - onDuty
+        - accountStatus
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          maxLength: 100
+          example: Jane Citizen
+        email:
+          type: string
+          format: email
+          maxLength: 150
+          example: citizen@ferms.test
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+          example: "555-0101"
+        role:
+          type: string
+          enum: [citizen, dispatch_operator, firefighter, station_officer, admin]
+          example: citizen
+        stationId:
+          type: integer
+          nullable: true
+          example: 1
+        onDuty:
+          type: boolean
+          example: false
+        accountStatus:
+          type: string
+          enum: [active, inactive]
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-01T08:00:00.000Z"
+
+    Station:
+      type: object
+      required:
+        - id
+        - name
+        - address
+        - latitude
+        - longitude
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          maxLength: 150
+          example: Downtown Fire Station 1
+        address:
+          type: string
+          maxLength: 255
+          example: 100 Main Street, Downtown
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 19.0760
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 72.8777
+        contact:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: "555-FIRE-01"
+        availableVehicles:
+          type: integer
+          description: Count of currently available vehicles at this station
+          example: 3
+        onDutyPersonnel:
+          type: integer
+          description: Count of on-duty personnel currently at this station
+          example: 7
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-01T00:00:00.000Z"
+
+    Vehicle:
+      type: object
+      required:
+        - id
+        - stationId
+        - type
+        - registrationNo
+        - status
+      properties:
+        id:
+          type: integer
+          example: 1
+        stationId:
+          type: integer
+          example: 1
+        type:
+          type: string
+          maxLength: 50
+          example: fire_engine
+        registrationNo:
+          type: string
+          maxLength: 30
+          example: MH-01-FE-1001
+        status:
+          type: string
+          enum: [available, dispatched, maintenance]
+          example: available
+
+    Incident:
+      type: object
+      required:
+        - id
+        - reporterId
+        - latitude
+        - longitude
+        - description
+        - severity
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 101
+        reporterId:
+          type: integer
+          example: 1
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 19.0792
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 72.8791
+        address:
+          type: string
+          nullable: true
+          maxLength: 255
+          example: 45 Commercial Complex, Downtown
+        description:
+          type: string
+          example: Electrical fire detected on 2nd floor server room with heavy smoke.
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          example: high
+        status:
+          type: string
+          enum: [reported, unassigned, assigned, in_progress, resolved, closed]
+          example: assigned
+        stationId:
+          type: integer
+          nullable: true
+          example: 1
+        station:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: Downtown Fire Station 1
+        closingSummary:
+          type: string
+          nullable: true
+          example: Extinguished with dry chemical retardant.
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-13T10:15:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-10-13T10:16:30.000Z"
+
+    StatusHistoryItem:
+      type: object
+      required:
+        - id
+        - incidentId
+        - status
+        - changedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        incidentId:
+          type: integer
+          example: 101
+        status:
+          type: string
+          enum: [reported, unassigned, assigned, in_progress, resolved, closed]
+          example: assigned
+        changedBy:
+          type: integer
+          nullable: true
+          example: 2
+        changedAt:
+          type: string
+          format: date-time
+          example: "2026-10-13T10:16:30.000Z"
+
+    Note:
+      type: object
+      required:
+        - id
+        - incidentId
+        - authorId
+        - note
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        incidentId:
+          type: integer
+          example: 101
+        authorId:
+          type: integer
+          example: 3
+        authorName:
+          type: string
+          example: Sam Firefighter
+        note:
+          type: string
+          example: First unit arrived on scene; perimeter evacuated.
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-13T10:20:00.000Z"
+
+    Notification:
+      type: object
+      required:
+        - id
+        - recipientId
+        - type
+        - message
+        - readStatus
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 201
+        recipientId:
+          type: integer
+          example: 1
+        incidentId:
+          type: integer
+          nullable: true
+          example: 101
+        type:
+          type: string
+          enum: [dispatch, status_update, system]
+          example: dispatch
+        message:
+          type: string
+          example: Response dispatched from Downtown Fire Station 1.
+        readStatus:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-13T10:16:30.000Z"
+
+    IncidentDetail:
+      allOf:
+        - $ref: '#/components/schemas/Incident'
+        - type: object
+          properties:
+            reporterName:
+              type: string
+              example: Jane Citizen
+            statusHistory:
+              type: array
+              items:
+                $ref: '#/components/schemas/StatusHistoryItem'
+            notes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Note'
+            vehicles:
+              type: array
+              items:
+                $ref: '#/components/schemas/Vehicle'
+
+    IncidentStats:
+      type: object
+      required:
+        - reported
+        - unassigned
+        - assigned
+        - in_progress
+        - resolved
+        - closed
+      properties:
+        reported:
+          type: integer
+          example: 1
+        unassigned:
+          type: integer
+          example: 0
+        assigned:
+          type: integer
+          example: 3
+        in_progress:
+          type: integer
+          example: 2
+        resolved:
+          type: integer
+          example: 15
+        closed:
+          type: integer
+          example: 40
+
+    # --------------------------------------------------------------------------
+    # Request Body Schemas
+    # --------------------------------------------------------------------------
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Jane Citizen
+        email:
+          type: string
+          format: email
+          maxLength: 150
+          example: citizen@ferms.test
+        password:
+          type: string
+          minLength: 8
+          example: Passw0rd!
+        phone:
+          type: string
+          maxLength: 20
+          example: "555-0101"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: citizen@ferms.test
+        password:
+          type: string
+          example: Passw0rd!
+
+    AdminCreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - role
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Sam Firefighter
+        email:
+          type: string
+          format: email
+          maxLength: 150
+          example: firefighter@ferms.test
+        password:
+          type: string
+          minLength: 8
+          example: Passw0rd!
+        role:
+          type: string
+          enum: [citizen, dispatch_operator, firefighter, station_officer, admin]
+          example: firefighter
+        phone:
+          type: string
+          maxLength: 20
+          example: "555-0103"
+        stationId:
+          type: integer
+          nullable: true
+          example: 1
+        onDuty:
+          type: boolean
+          default: false
+          example: true
+
+    AdminUpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Sam Firefighter
+        phone:
+          type: string
+          maxLength: 20
+          example: "555-0103"
+        stationId:
+          type: integer
+          nullable: true
+          example: 1
+        onDuty:
+          type: boolean
+          example: true
+
+    UpdateUserRoleRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum: [citizen, dispatch_operator, firefighter, station_officer, admin]
+          example: station_officer
+
+    CreateIncidentRequest:
+      type: object
+      required:
+        - latitude
+        - longitude
+        - description
+        - severity
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 19.0792
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 72.8791
+        address:
+          type: string
+          maxLength: 255
+          example: 45 Commercial Complex, Downtown
+        description:
+          type: string
+          example: Electrical fire detected on 2nd floor server room with heavy smoke.
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          example: high
+
+    AssignIncidentRequest:
+      type: object
+      required:
+        - stationId
+      properties:
+        stationId:
+          type: integer
+          example: 2
+
+    UpdateIncidentStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [in_progress]
+          description: Only 'in_progress' is allowed on this endpoint
+          example: in_progress
+
+    AddIncidentNoteRequest:
+      type: object
+      required:
+        - note
+      properties:
+        note:
+          type: string
+          example: Backing units requested on eastern perimeter.
+
+    ResolveIncidentRequest:
+      type: object
+      required:
+        - closingSummary
+      properties:
+        closingSummary:
+          type: string
+          example: Fire extinguished using Class C foam. No civilian casualties.
+
+    CreateStationRequest:
+      type: object
+      required:
+        - name
+        - address
+        - latitude
+        - longitude
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          example: Suburban Rescue Station 3
+        address:
+          type: string
+          maxLength: 255
+          example: 400 Lake Road, Westside
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 19.1663
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 72.8526
+        contact:
+          type: string
+          maxLength: 100
+          example: "555-FIRE-03"
+
+    UpdateStationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          example: Suburban Rescue Station 3
+        address:
+          type: string
+          maxLength: 255
+          example: 400 Lake Road, Westside
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 19.1663
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 72.8526
+        contact:
+          type: string
+          maxLength: 100
+          example: "555-FIRE-03"
+
+    CreateVehicleRequest:
+      type: object
+      required:
+        - stationId
+        - type
+        - registrationNo
+      properties:
+        stationId:
+          type: integer
+          example: 1
+        type:
+          type: string
+          maxLength: 50
+          example: rescue_van
+        registrationNo:
+          type: string
+          maxLength: 30
+          example: MH-01-RV-2002
+        status:
+          type: string
+          enum: [available, maintenance]
+          default: available
+          example: available
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [available, maintenance]
+          description: Manual updates only allow available or maintenance
+          example: maintenance
+        type:
+          type: string
+          maxLength: 50
+          example: rescue_van
+        stationId:
+          type: integer
+          example: 2
+
+    UpdatePersonnelStationRequest:
+      type: object
+      required:
+        - stationId
+      properties:
+        stationId:
+          type: integer
+          example: 2
+
+    UpdatePersonnelDutyRequest:
+      type: object
+      required:
+        - onDuty
+      properties:
+        onDuty:
+          type: boolean
+          example: true
+
+    # --------------------------------------------------------------------------
+    # Response Envelopes
+    # --------------------------------------------------------------------------
+    AuthResponseData:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    AuthResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AuthResponseData'
+
+    UserEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+
+    UsersListEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    StationEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Station'
+
+    StationsListEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    VehicleEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Vehicle'
+
+    VehiclesListEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    IncidentEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Incident'
+
+    IncidentsListEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Incident'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    IncidentDetailEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/IncidentDetail'
+
+    IncidentStatsEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/IncidentStats'
+
+    NoteEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Note'
+
+    NotificationEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Notification'
+
+    NotificationsListEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        meta:
+          $ref: '#/components/schemas/NotificationMeta'
