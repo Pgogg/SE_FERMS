@@ -1,4 +1,133 @@
-/* typography.css — Global heading and body type scale using --font-display and --font-body tokens */
-h1, h2, h3, h4, h5, h6 {
+/* typography.css — Global typography styles and scale per System Design §14.4 */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  color: var(--color-ink);
+}
+
+h1 {
+  font-size: 56px;
+  line-height: 1.0;
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 96px;
+    line-height: 0.95;
+  }
+}
+
+h2 {
+  font-size: 36px;
+  line-height: 1.0;
+}
+
+@media (min-width: 1024px) {
+  h2 {
+    font-size: 56px;
+    line-height: 1.0;
+  }
+}
+
+h3 {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+@media (min-width: 1024px) {
+  h3 {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+}
+
+h4,
+h5,
+h6 {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+/* Display hero heading (96px desktop / 52px phone) */
+.display-hero {
+  font-family: var(--font-display);
+  font-size: 52px;
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+}
+
+@media (min-width: 1024px) {
+  .display-hero {
+    font-size: 96px;
+  }
+}
+
+/* Display section heading (56px desktop / 36px phone) */
+.display-section {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+}
+
+@media (min-width: 1024px) {
+  .display-section {
+    font-size: 56px;
+  }
+}
+
+/* Display card heading (28px desktop / 24px phone) */
+.display-card {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+}
+
+@media (min-width: 1024px) {
+  .display-card {
+    font-size: 28px;
+  }
+}
+
+/* Eyebrow label (16px, uppercase, color --color-brand-text, line-height 1) */
+.eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-brand-text);
+  font-weight: 400;
+}
+
+/* Body text (16px, line-height 1.6) */
+.body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* Caption / small text (14px, line-height 1.5) */
+.caption {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-muted);
 }
