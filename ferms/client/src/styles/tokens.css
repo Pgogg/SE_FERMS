@@ -1,4 +1,6 @@
-/* tokens.css — Design system CSS custom properties: colors, typography, spacing, border-radius, and severity/status tokens */
+/* tokens.css — Design system CSS custom properties: colors, typography, spacing, border-radius, elevation, and status tokens */
+/* Breakpoints: mobile < 640px, tablet: 640px - 1023px, desktop: 1024px - 1279px, wide: 1280px+ */
+
 :root {
   /* Brand */
   --color-brand: #FF6A00;
@@ -44,4 +46,21 @@
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-float: 0 8px 24px rgba(17, 17, 17, 0.08);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Page layout */
+  --max-width: 1200px;
 }

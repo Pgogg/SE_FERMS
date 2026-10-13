@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
-  <!-- Placeholder FERMS flame logo mark -->
-  <path d="M20 4 C20 4 10 16 10 26 C10 32 14.5 36 20 36 C25.5 36 30 32 30 26 C30 16 20 4 20 4Z" fill="#FF6A00"/>
-  <path d="M20 16 C20 16 15 23 15 27 C15 29.8 17.2 32 20 32 C22.8 32 25 29.8 25 27 C25 23 20 16 20 16Z" fill="#FFF1E6"/>
-  <text x="38" y="28" font-family="'Bebas Neue',Impact,sans-serif" font-size="24" fill="#1A1814">FERMS</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 40" fill="none">
+  <!-- Original geometric flame mark -->
+  <g id="flame-mark">
+    <!-- Outer flame silhouette -->
+    <path d="M22 3 C22 3 13 13 13 22 C13 28.5 17.5 34 23 34 C28.5 34 33 28.5 33 22 C33 13.5 24 5 22 3 Z" fill="#FF6A00"/>
+    <!-- Secondary tongue of flame for dynamic geometric look -->
+    <path d="M19 14 C19 14 15 20 15 24 C15 28 18 31 22 31 C26 31 28 27.5 28 24 C28 18 20.5 15 19 14 Z" fill="#E55F00"/>
+    <!-- Inner bright core flame -->
+    <path d="M22 19 C22 19 18 24 18 27 C18 29.5 19.8 31 22 31 C24.2 31 26 29.5 26 27 C26 24 22.8 20.5 22 19 Z" fill="#FFF1E6"/>
+  </g>
+  <!-- Brand text -->
+  <text x="42" y="28" font-family="'Bebas Neue', Impact, sans-serif" font-size="28" letter-spacing="1.5" fill="#111111" font-weight="700">FERMS</text>
 </svg>

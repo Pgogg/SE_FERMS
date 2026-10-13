@@ -1,1 +1,30 @@
-.root {}
+/* Badge.module.css — Accessible badges with tinted backgrounds and dark ink text per §14.3 */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background-color: color-mix(in srgb, var(--badge-token) 16%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--badge-token) 35%, transparent);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--badge-token);
+}
+
+.label {
+  display: inline-block;
+  line-height: 1;
+}
