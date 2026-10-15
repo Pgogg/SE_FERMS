@@ -1,4 +1,5 @@
-// seeders/01-users.js — Seeds default admin, dispatcher, firefighter, and citizen users
+// seeders/03-vehicles-incidents.js — Seeds sample vehicles and incidents
+// TODO: Vedant W2 and W7
 'use strict';
 
 module.exports = {

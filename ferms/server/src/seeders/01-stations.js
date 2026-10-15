@@ -1,4 +1,5 @@
-// seeders/02-stations-vehicles-incidents.js — Seeds sample stations, vehicles, and incidents for demo data
+// seeders/01-stations.js — Seeds default fire stations
+// TODO: Vedant W2 and W7
 'use strict';
 
 module.exports = {
