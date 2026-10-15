@@ -1,1 +1,164 @@
-.root {}
+/* Register.module.css — Split-layout citizen registration styles per §14.7 */
+
+/* ── Outer wrapper: side-by-side on desktop ── */
+.page {
+  display: flex;
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+}
+
+/* ── Dark brand panel ── */
+.panel {
+  display: none; /* hidden on mobile/tablet */
+  background-color: var(--color-dark);
+  width: 420px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 !important;
+}
+
+@media (min-width: 1024px) {
+  .panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.panelInner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-7);
+  position: relative;
+  z-index: 1;
+}
+
+.panelLogo {
+  /* Invert dark text to white in the dark panel */
+  filter: brightness(0) invert(1);
+  height: 36px;
+  width: auto;
+}
+
+.panelTagline {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: var(--color-bg);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.flameDeco {
+  position: absolute;
+  bottom: -32px;
+  right: -32px;
+  width: 220px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.flameSvg {
+  width: 100%;
+  height: auto;
+}
+
+/* ── Form section ── */
+.formSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-7) var(--space-5);
+  overflow-y: auto;
+}
+
+.formWrap {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Mobile-only logo (hidden on desktop where panel shows) */
+.mobileLogo {
+  display: block;
+  height: 32px;
+  width: auto;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .mobileLogo {
+    display: none;
+  }
+}
+
+/* ── Card ── */
+.card {
+  padding: var(--space-7) !important;
+  background-color: var(--color-bg) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-float);
+}
+
+.cardHeader {
+  margin-bottom: var(--space-6);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+  text-transform: uppercase;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.link {
+  color: var(--color-brand-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--color-brand);
+  text-decoration: underline;
+}
+
+/* ── Form layout ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Inline server error banner */
+.errorBanner {
+  background-color: color-mix(in srgb, var(--st-unassigned) 10%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--st-unassigned) 30%, var(--color-bg));
+  border-radius: var(--radius-sm);
+  color: var(--st-unassigned);
+  font-size: 14px;
+  padding: var(--space-3) var(--space-4);
+  line-height: 1.5;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: var(--space-2);
+}
