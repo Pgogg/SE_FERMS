@@ -41,7 +41,7 @@ function getUserFromRequest(request) {
   const byEmail = users.find((u) => u.email.toLowerCase() === token.toLowerCase());
   if (byEmail) return byEmail;
 
-  return users.find((u) => u.role === 'citizen') || users[0];
+  return null;
 }
 
 export const track1Handlers = [

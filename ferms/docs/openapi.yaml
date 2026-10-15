@@ -290,7 +290,10 @@ paths:
         - Incidents
       summary: List incidents assigned to caller's station
       description: >-
-        Returns incidents assigned to the caller's station in status assigned, in_progress, and resolved.
+        Returns incidents assigned to the caller's station in statuses assigned, in_progress, and resolved.
+        Decision (GET /incidents/assigned): includes all three active/post-active statuses so that
+        firefighters can see in-progress and resolved incidents for their station, not just new assignments.
+        Station is taken from req.user.stationId; admin is not permitted on this endpoint.
         Owner: Vedant. Requirements: UC-10 step 1.
       x-roles:
         - firefighter
@@ -346,10 +349,13 @@ paths:
         - Incidents
       summary: Manual dispatch override
       description: >-
-        Reassigns an incident to a specified fire station. Only valid for incidents in status
-        unassigned or assigned (also reported or in_progress; rejected with 400 if resolved or closed).
-        Releases old vehicle(s), reserves a vehicle at the new station, updates station_id, writes history row,
-        and notifies target station personnel.
+        Manual dispatch override. Reassigns an incident to a specified fire station.
+        Decision: valid only while incident status is one of {reported, unassigned, assigned, in_progress};
+        rejected with 400 (INVALID_TRANSITION) when status is resolved or closed (UC-05 ext. 6a).
+        In one transaction: releases old vehicle(s) (released_at set, vehicle → available), reserves one
+        available vehicle at the target station (incident_vehicles row, vehicle → dispatched), updates
+        station_id, sets status to assigned (unassigned incidents also become assigned), writes history row,
+        and notifies new station on-duty personnel and reporting citizen.
         Owner: Parth. Requirements: Dispatch.Override, BR-1, UC-05.
       x-roles:
         - dispatch_operator
@@ -391,8 +397,11 @@ paths:
         - Incidents
       summary: Update incident status
       description: >-
-        Transitions incident status. In practice moves assigned to in_progress.
-        Transitions to resolved or closed are rejected with 400 pointing to dedicated endpoints.
+        Transitions incident status. Decision (PATCH /incidents/{id}/status): this endpoint only accepts
+        status=in_progress, moving the incident from assigned to in_progress. Any other target status
+        is rejected with 400 (INVALID_TRANSITION) and a message pointing to the dedicated endpoint
+        (/resolve for in_progress→resolved, /close for resolved→closed).
+        Caller must belong to the incident's assigned station.
         Owner: Vedant. Requirements: Incident.Status.Update, Incident.Status.Invalid, Incident.Status.Transition.
       x-roles:
         - firefighter
