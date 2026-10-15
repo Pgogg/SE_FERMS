@@ -1,1 +1,138 @@
-.root {}
+/* Table.module.css — Responsive Table with sticky header, row hover, and stacked card view on mobile */
+
+.wrapper {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.tableWrap {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.thead {
+  background: var(--color-bg-warm);
+}
+
+.th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 150ms ease;
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background-color: var(--color-bg-warm);
+}
+
+.tr.clickable {
+  cursor: pointer;
+}
+
+.tr.clickable:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: -3px;
+}
+
+.td {
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+/* Mobile stacked card layout below 640px */
+.cardList {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tableWrap {
+    display: none;
+  }
+
+  .cardList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .cardRow {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .cardRow.clickable {
+    cursor: pointer;
+  }
+
+  .cardRow.clickable:hover {
+    border-color: var(--color-brand);
+    box-shadow: var(--shadow-float);
+  }
+
+  .cardRow.clickable:focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  .cardField {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .cardField:last-child {
+    border-bottom: none;
+  }
+
+  .cardLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+
+  .cardValue {
+    font-size: 0.875rem;
+    color: var(--color-text);
+    text-align: right;
+  }
+}

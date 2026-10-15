@@ -1,1 +1,57 @@
-.root {}
+/* SectionHeading.module.css — Eyebrow + condensed display heading + intro */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  font-family: var(--font-body);
+}
+
+.left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.center {
+  align-items: center;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-brand-text);
+  background-color: var(--color-brand-tint);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 3rem;
+  }
+}
+
+.intro {
+  margin: var(--space-1) 0 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+  max-width: 600px;
+}

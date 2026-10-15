@@ -1,0 +1,27 @@
+/* AppLayout.module.css — Application layout shell */
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+}
+
+.contained {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-9);
+}
+
+.fullWidth {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
