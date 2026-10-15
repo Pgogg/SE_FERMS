@@ -1,1 +1,73 @@
-.root {}
+/* Tabs.module.css — Pill-style tab navigation */
+
+.tablist {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px;
+  background-color: var(--color-bg-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: var(--space-1) var(--space-4);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.tab:hover:not(.selected) {
+  color: var(--color-ink);
+}
+
+.tab:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.selected {
+  background-color: var(--color-dark);
+  color: var(--color-bg);
+  box-shadow: 0 1px 3px rgba(17, 17, 17, 0.1);
+}
+
+.label {
+  display: inline-block;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.selected .countBadge {
+  background-color: var(--color-dark-2);
+  color: var(--color-bg);
+}

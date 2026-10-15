@@ -1,1 +1,50 @@
-.root {}
+/* Skeleton.module.css — Loading skeleton placeholder with shimmering pulse */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.bone {
+  display: block;
+  width: 100%;
+  height: 1rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-warm);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-bg-warm) 0%,
+    var(--color-border) 50%,
+    var(--color-bg-warm) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.bone:last-child:not(:first-child) {
+  width: 75%;
+}
+
+.circle {
+  border-radius: var(--radius-pill);
+  aspect-ratio: 1 / 1;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bone {
+    animation: none;
+    background-image: none;
+    background-color: var(--color-bg-warm);
+  }
+}

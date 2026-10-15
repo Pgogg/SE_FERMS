@@ -1,1 +1,178 @@
-.root {}
+/* StationResources.module.css — Styling for station resources (vehicles & personnel) */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+@media (min-width: 768px) {
+  .topBar {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.stationPicker {
+  width: 100%;
+  max-width: 320px;
+  flex-shrink: 0;
+  margin-bottom: var(--space-4);
+}
+
+.tabRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+@media (min-width: 640px) {
+  .tabRow {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* Vehicle Table Styles */
+.regBadge {
+  display: inline-block;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 3px var(--space-2);
+  background-color: var(--color-bg-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  letter-spacing: 0.05em;
+}
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  font-size: 0.8125rem;
+  padding: var(--space-1) var(--space-3);
+  min-height: 36px;
+}
+
+.dangerBtn {
+  color: var(--sev-critical);
+}
+
+.dispatchedHint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-brand-text);
+  background-color: var(--color-brand-tint);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+/* Personnel Table Styles */
+.staffInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.staffName {
+  font-size: 0.9375rem;
+  color: var(--color-ink);
+}
+
+.staffEmail {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.dutyOn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--st-resolved);
+}
+
+.dutyOff {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.dutyDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background-color: currentColor;
+}
+
+/* Error States */
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--sev-critical);
+}
+
+.errorMessage {
+  margin: 0;
+  color: var(--sev-critical);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.errorBanner {
+  margin: 0;
+  padding: var(--space-3);
+  background-color: var(--color-brand-tint);
+  border: 1px solid var(--sev-critical);
+  border-radius: var(--radius-sm);
+  color: var(--sev-critical);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Modal form & confirmation */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.modalConfirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmSubtext {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}

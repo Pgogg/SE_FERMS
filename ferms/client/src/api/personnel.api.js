@@ -15,3 +15,8 @@ export const updatePersonnelDuty = async (userId, data) => {
   const response = await axiosInstance.patch(`/personnel/${userId}/duty`, data);
   return response.data;
 };
+
+export const listAllFirefighters = async () => {
+  const response = await axiosInstance.get('/users');
+  return response.data;
+};
