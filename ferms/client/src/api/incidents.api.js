@@ -12,6 +12,8 @@ export const getMyIncidents = async () => {
   return response.data;
 };
 
+export const myIncidents = getMyIncidents;
+
 export const assignIncident = async (id, data) => {
   const response = await axiosInstance.patch(`/incidents/${id}/assign`, data);
   return response.data;
