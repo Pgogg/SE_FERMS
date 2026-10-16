@@ -1,7 +1,7 @@
 // services/resource.service.js — Queries and updates vehicle and personnel availability across stations (§4)
 'use strict';
 
-const { Op, fn, col } = require('sequelize');
+const { Op, fn, col, Transaction } = require('sequelize');
 const { Station, Vehicle, User, IncidentVehicle } = require('../models');
 const { ROLES, VEHICLE_STATUS } = require('../domain/constants');
 const { AppError } = require('../middleware/error.middleware');
@@ -12,8 +12,9 @@ const { AppError } = require('../middleware/error.middleware');
 
 /**
  * getAvailableVehicle
- * Returns the first vehicle with status 'available' at that station,
- * row-locked FOR UPDATE when a transaction is given.
+ * Returns the first vehicle with status 'available' at that station (order by id),
+ * or null. When a transaction is passed, lock the row with FOR UPDATE
+ * (transaction.LOCK.UPDATE) so two simultaneous reports cannot take the same vehicle.
  *
  * @param {number} stationId
  * @param {{ transaction?: object }} [opts]
@@ -30,7 +31,9 @@ const getAvailableVehicle = async (stationId, { transaction } = {}) => {
 
   if (transaction) {
     findOptions.transaction = transaction;
-    findOptions.lock = (transaction.LOCK && transaction.LOCK.UPDATE) ? transaction.LOCK.UPDATE : true;
+    findOptions.lock = (transaction.LOCK && transaction.LOCK.UPDATE)
+      ? transaction.LOCK.UPDATE
+      : (Transaction && Transaction.LOCK && Transaction.LOCK.UPDATE ? Transaction.LOCK.UPDATE : true);
   }
 
   const vehicle = await Vehicle.findOne(findOptions);
@@ -39,8 +42,8 @@ const getAvailableVehicle = async (stationId, { transaction } = {}) => {
 
 /**
  * releaseVehicles
- * For every incident_vehicles row with released_at null:
- * set released_at to now and set the vehicle back to 'available'.
+ * For every incident_vehicles row of the incident with released_at null:
+ * set released_at to now and set the vehicle status back to 'available'.
  * Returns the number of vehicles released.
  *
  * @param {number} incidentId
@@ -78,7 +81,7 @@ const releaseVehicles = async (incidentId, { transaction } = {}) => {
     { status: VEHICLE_STATUS.AVAILABLE },
     {
       where: {
-        id: vehicleIds,
+        id: { [Op.in]: vehicleIds },
       },
       transaction,
     }
@@ -87,33 +90,54 @@ const releaseVehicles = async (incidentId, { transaction } = {}) => {
   return activeAssignments.length;
 };
 
+/**
+ * countAvailableByStation
+ * Returns a map of stationId to available vehicle count.
+ *
+ * @param {{ transaction?: object }} [opts]
+ * @returns {Promise<Map<number, number>>}
+ */
+const countAvailableByStation = async ({ transaction } = {}) => {
+  const vehicleCounts = await Vehicle.findAll({
+    attributes: [
+      'stationId',
+      [fn('COUNT', col('id')), 'availableCount'],
+    ],
+    where: {
+      status: VEHICLE_STATUS.AVAILABLE,
+    },
+    group: ['stationId'],
+    raw: true,
+    transaction,
+  });
+
+  const map = new Map();
+  for (const r of vehicleCounts) {
+    const stationId = Number(r.stationId);
+    const count = parseInt(r.availableCount, 10) || 0;
+    map.set(stationId, count);
+    map[stationId] = count;
+  }
+  return map;
+};
+
 // ============================================================================
-// Vedant's Helper Service Functions (TASK W2-V-BE-1)
+// Helper Service Functions (TASK W2-V-BE-1 & W3-V-BE-1)
 // ============================================================================
 
 /**
  * listStationsWithCounts
  * Returns all fire stations with grouped counts for availableVehicles and onDutyPersonnel.
- * Requirement 1: Compute with grouped queries, not one query per station.
+ * Requirement: Compute with grouped queries, not one query per station.
  *
  * @returns {Promise<Array<object>>}
  */
 const listStationsWithCounts = async () => {
-  const [stations, vehicleCounts, personnelCounts] = await Promise.all([
+  const [stations, vehicleMap, personnelCounts] = await Promise.all([
     Station.findAll({
       order: [['id', 'ASC']],
     }),
-    Vehicle.findAll({
-      attributes: [
-        'stationId',
-        [fn('COUNT', col('id')), 'availableCount'],
-      ],
-      where: {
-        status: VEHICLE_STATUS.AVAILABLE,
-      },
-      group: ['stationId'],
-      raw: true,
-    }),
+    countAvailableByStation(),
     User.findAll({
       attributes: [
         'stationId',
@@ -130,9 +154,6 @@ const listStationsWithCounts = async () => {
     }),
   ]);
 
-  const vehicleMap = new Map(
-    vehicleCounts.map((r) => [Number(r.stationId), parseInt(r.availableCount, 10)])
-  );
   const personnelMap = new Map(
     personnelCounts.map((r) => [Number(r.stationId), parseInt(r.onDutyCount, 10)])
   );
@@ -181,7 +202,7 @@ const createStation = async ({ name, address, latitude, longitude, contact }) =>
     latitude: lat,
     longitude: lon,
     contact: contact ? String(contact).trim() : null,
-    createdAt: new Date(),  // explicit: model declares createdAt allowNull:false
+    createdAt: new Date(),
   });
 
   return station;
@@ -538,6 +559,7 @@ const updatePersonnelDuty = async (targetUserId, onDuty, user) => {
 module.exports = {
   getAvailableVehicle,
   releaseVehicles,
+  countAvailableByStation,
   listStationsWithCounts,
   createStation,
   updateStation,

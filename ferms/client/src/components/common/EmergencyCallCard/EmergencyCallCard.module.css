@@ -1,1 +1,71 @@
-.root {}
+/* EmergencyCallCard.module.css — Styles for the emergency call card */
+
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-dark);
+  color: #ffffff;
+}
+
+/* Orange circle icon */
+.iconWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+/* Text column */
+.body {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.telLink {
+  color: var(--color-brand);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s ease;
+}
+
+.telLink:hover,
+.telLink:focus-visible {
+  opacity: 0.85;
+}
+
+.telLink:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Mobile: stack icon + body vertically if narrow */
+@media (max-width: 400px) {
+  .root {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .text {
+    font-size: 0.95rem;
+  }
+}

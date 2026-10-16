@@ -5,8 +5,47 @@
 //   - GET /api/stations/:id/personnel, PATCH /api/personnel/:userId/station, PATCH /api/personnel/:userId/duty
 
 import { http, HttpResponse } from 'msw';
-import { stations, users, serializeUser } from '../data/track1.data.js';
+import { stations, users, incidents, serializeUser, serializeIncident } from '../data/track1.data.js';
 import { vehicles, getNextVehicleId, getNextStationId } from '../data/track2.data.js';
+
+// Ensure demo dataset includes unassigned and closed incidents for full 6-tile stats telemetry
+if (Array.isArray(incidents)) {
+  if (!incidents.some((i) => i.status === 'unassigned')) {
+    incidents.push({
+      id: 105,
+      reporterId: 1,
+      latitude: 19.1200,
+      longitude: 72.8500,
+      address: 'Plot 14, MIDC Industrial Area',
+      description: 'Chemical vapor leak and electrical short-circuit hazard near warehouse.',
+      severity: 'critical',
+      status: 'unassigned',
+      stationId: null,
+      station: null,
+      closingSummary: null,
+      createdAt: '2026-10-13T12:00:00.000Z',
+      updatedAt: '2026-10-13T12:00:00.000Z',
+    });
+  }
+  if (!incidents.some((i) => i.status === 'closed')) {
+    incidents.push({
+      id: 106,
+      reporterId: 1,
+      latitude: 19.0700,
+      longitude: 72.8800,
+      address: 'Near Old Toll Plaza, Highway 4',
+      description: 'Dry grass blaze by highway embankment.',
+      severity: 'low',
+      status: 'closed',
+      stationId: 1,
+      station: { id: 1, name: 'Downtown Fire Station 1' },
+      closingSummary: 'Fire extinguished and site inspected.',
+      createdAt: '2026-10-12T10:00:00.000Z',
+      updatedAt: '2026-10-12T16:00:00.000Z',
+    });
+  }
+}
+
 
 /**
  * Helper to identify the authenticated user from the Authorization header.
@@ -38,7 +77,7 @@ export const track2Handlers = [
   // ==========================================
 
   // GET /api/stations
-  http.get('/api/stations', ({ request }) => {
+  http.get('*/api/stations', ({ request }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -73,7 +112,7 @@ export const track2Handlers = [
   }),
 
   // POST /api/stations
-  http.post('/api/stations', async ({ request }) => {
+  http.post('*/api/stations', async ({ request }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -139,7 +178,7 @@ export const track2Handlers = [
   }),
 
   // PATCH /api/stations/:id
-  http.patch('/api/stations/:id', async ({ request, params }) => {
+  http.patch('*/api/stations/:id', async ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -237,7 +276,7 @@ export const track2Handlers = [
   // ==========================================
 
   // GET /api/stations/:id/vehicles
-  http.get('/api/stations/:id/vehicles', ({ request, params }) => {
+  http.get('*/api/stations/:id/vehicles', ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -262,7 +301,7 @@ export const track2Handlers = [
   }),
 
   // POST /api/vehicles
-  http.post('/api/vehicles', async ({ request }) => {
+  http.post('*/api/vehicles', async ({ request }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -330,7 +369,7 @@ export const track2Handlers = [
   }),
 
   // PATCH /api/vehicles/:id
-  http.patch('/api/vehicles/:id', async ({ request, params }) => {
+  http.patch('*/api/vehicles/:id', async ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -384,7 +423,7 @@ export const track2Handlers = [
   }),
 
   // DELETE /api/vehicles/:id
-  http.delete('/api/vehicles/:id', ({ request, params }) => {
+  http.delete('*/api/vehicles/:id', ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -439,7 +478,7 @@ export const track2Handlers = [
   // ==========================================
 
   // GET /api/stations/:id/personnel
-  http.get('/api/stations/:id/personnel', ({ request, params }) => {
+  http.get('*/api/stations/:id/personnel', ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -472,7 +511,7 @@ export const track2Handlers = [
   }),
 
   // PATCH /api/personnel/:userId/station
-  http.patch('/api/personnel/:userId/station', async ({ request, params }) => {
+  http.patch('*/api/personnel/:userId/station', async ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -520,8 +559,31 @@ export const track2Handlers = [
     return HttpResponse.json({ data: serializeUser(user) });
   }),
 
+  // GET /api/users
+  http.get('*/api/users', ({ request }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['admin', 'station_officer'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Permission denied.' } },
+        { status: 403 }
+      );
+    }
+
+    const data = users.map(serializeUser);
+    return HttpResponse.json({
+      data,
+      meta: { count: data.length },
+    });
+  }),
+
   // PATCH /api/personnel/:userId/duty
-  http.patch('/api/personnel/:userId/duty', async ({ request, params }) => {
+  http.patch('*/api/personnel/:userId/duty', async ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
       return HttpResponse.json(
@@ -564,6 +626,204 @@ export const track2Handlers = [
 
     user.onDuty = onDuty;
     return HttpResponse.json({ data: serializeUser(user) });
+  }),
+
+  // ==========================================
+  // Incident Read Endpoints (§5.2 — Vedant)
+  // ==========================================
+
+  // GET /api/incidents/stats (dispatch_operator, station_officer, admin)
+  // Must be declared BEFORE /:id
+  http.get('*/api/incidents/stats', ({ request }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['dispatch_operator', 'station_officer', 'admin'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Permission denied.' } },
+        { status: 403 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const stationIdParam = url.searchParams.get('stationId');
+
+    let stationId = null;
+    if (caller.role === 'station_officer') {
+      stationId = caller.stationId;
+    } else if (stationIdParam) {
+      stationId = Number(stationIdParam);
+    }
+
+    const stats = {
+      reported: 0,
+      unassigned: 0,
+      assigned: 0,
+      in_progress: 0,
+      resolved: 0,
+      closed: 0,
+    };
+
+    for (const inc of incidents) {
+      if (stationId != null && inc.stationId !== stationId) {
+        continue;
+      }
+      if (stats[inc.status] !== undefined) {
+        stats[inc.status]++;
+      }
+    }
+
+    return HttpResponse.json({ data: stats });
+  }),
+
+  // GET /api/incidents/assigned (firefighter, station_officer)
+  // Must be declared BEFORE /:id
+  http.get('*/api/incidents/assigned', ({ request }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['firefighter', 'station_officer'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Permission denied.' } },
+        { status: 403 }
+      );
+    }
+
+    const stationId = caller.stationId;
+    const allowedStatuses = ['assigned', 'in_progress', 'resolved'];
+    const filtered = incidents
+      .filter((i) => i.stationId === stationId && allowedStatuses.includes(i.status))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return HttpResponse.json({
+      data: filtered.map(serializeIncident),
+      meta: { count: filtered.length },
+    });
+  }),
+
+  // GET /api/incidents (dispatch_operator, station_officer, admin)
+  http.get('*/api/incidents', ({ request }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['dispatch_operator', 'station_officer', 'admin'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Permission denied.' } },
+        { status: 403 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const statusParam = url.searchParams.get('status');
+    const stationIdParam = url.searchParams.get('stationId');
+    const includeClosed = url.searchParams.get('includeClosed') === 'true';
+
+    const validStatuses = ['reported', 'unassigned', 'assigned', 'in_progress', 'resolved', 'closed'];
+    if (statusParam && !validStatuses.includes(statusParam)) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: `Status must be one of: ${validStatuses.join(', ')}.` } },
+        { status: 400 }
+      );
+    }
+
+    let targetStationId = null;
+    if (caller.role === 'station_officer') {
+      targetStationId = caller.stationId;
+    } else if (stationIdParam) {
+      targetStationId = Number(stationIdParam);
+    }
+
+    let filtered = incidents.filter((inc) => {
+      // Station filter
+      if (targetStationId != null && inc.stationId !== targetStationId) {
+        return false;
+      }
+      // Status filter
+      if (statusParam) {
+        if (inc.status !== statusParam) return false;
+        if (statusParam === 'closed' && !includeClosed) return false;
+      } else if (!includeClosed && inc.status === 'closed') {
+        return false;
+      }
+      return true;
+    });
+
+    // Newest first, limit 200
+    filtered = filtered
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 200);
+
+    return HttpResponse.json({
+      data: filtered.map(serializeIncident),
+      meta: { count: filtered.length },
+    });
+  }),
+
+  // GET /api/incidents/:id (detail read)
+  http.get('*/api/incidents/:id', ({ request, params }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+
+    const id = Number(params.id);
+    const incident = incidents.find((i) => i.id === id);
+    if (!incident) {
+      return HttpResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Incident not found.' } },
+        { status: 404 }
+      );
+    }
+
+    // Authorization check per §9.3
+    let allowed = false;
+    if (['admin', 'dispatch_operator'].includes(caller.role)) {
+      allowed = true;
+    } else if (caller.role === 'citizen') {
+      allowed = incident.reporterId === caller.id;
+    } else if (['firefighter', 'station_officer'].includes(caller.role)) {
+      allowed = Boolean(incident.stationId && caller.stationId && incident.stationId === caller.stationId);
+    }
+
+    if (!allowed) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'You do not have permission to view this incident.' } },
+        { status: 403 }
+      );
+    }
+
+    return HttpResponse.json({
+      data: {
+        ...serializeIncident(incident),
+        station: incident.station || (incident.stationId ? { id: incident.stationId, name: `Station ${incident.stationId}` } : null),
+        statusHistory: [
+          {
+            id: 1,
+            incidentId: incident.id,
+            status: incident.status,
+            changedAt: incident.createdAt,
+            changedBy: 'System',
+          },
+        ],
+        notes: [],
+        vehicles: [],
+      },
+    });
   }),
 ];
 
