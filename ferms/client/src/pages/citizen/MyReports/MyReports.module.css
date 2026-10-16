@@ -1,1 +1,185 @@
-.root {}
+/* MyReports.module.css — Layout and styling for citizen reports list page */
+
+.root {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Page Header */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.refreshBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.reportNewBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Loading Skeletons */
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Error Banner with Retry */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-left: 5px solid var(--sev-critical);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.errorContent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.errorIcon {
+  color: var(--sev-critical);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.errorTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #991B1B;
+  margin: 0 0 2px 0;
+}
+
+.errorMessage {
+  font-size: 14px;
+  color: #7F1D1D;
+  margin: 0;
+}
+
+/* List container */
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.listMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.countBadge {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: var(--color-ink);
+  text-transform: uppercase;
+}
+
+.liveIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #03543F;
+  background: #DEF7EC;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.liveIndicator::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--st-resolved);
+}
+
+/* Cards Grid */
+.cardsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .root {
+    padding: var(--space-3) var(--space-3) var(--space-6);
+    gap: var(--space-4);
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .refreshBtn,
+  .reportNewBtn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .errorBanner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
