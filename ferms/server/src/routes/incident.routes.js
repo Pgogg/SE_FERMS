@@ -6,21 +6,28 @@ const asyncHandler = require('../utils/asyncHandler');
 const authenticate = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/rbac.middleware');
 const { ROLES } = require('../domain/constants');
-
 const incidentController = require('../controllers/incident.controller');
 
 // ===== Parth =====
-// POST / (createIncident)
-// GET /mine (myIncidents) — must be declared BEFORE /:id
-// PATCH /:id/assign (assign)
-if (typeof incidentController.myIncidents === 'function') {
-  router.get(
-    '/mine',
-    authenticate,
-    allowRoles(ROLES.CITIZEN),
-    asyncHandler(incidentController.myIncidents)
-  );
-}
+// POST /api/incidents — citizen only
+// Creates an incident and triggers the nearest-station dispatch engine.
+router.post(
+  '/',
+  authenticate,
+  allowRoles(ROLES.CITIZEN),
+  incidentController.createIncident
+);
+
+// GET /api/incidents/mine — citizen only
+// Returns the calling citizen's own incidents, newest first.
+// NOTE: This route must be registered BEFORE '/:id' to prevent "mine" being
+//       treated as an :id parameter by Vedant's read controller.
+router.get(
+  '/mine',
+  authenticate,
+  allowRoles(ROLES.CITIZEN),
+  incidentController.myIncidents
+);
 // ===== /Parth =====
 
 // ===== Vedant =====

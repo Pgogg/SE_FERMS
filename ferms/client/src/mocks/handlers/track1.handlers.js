@@ -482,7 +482,11 @@ export const track1Handlers = [
 
     return HttpResponse.json(
       {
-        data: serializeIncident(newIncident),
+        data: {
+          incident: serializeIncident(newIncident),
+          station: assignedStation ? { id: assignedStation.id, name: assignedStation.name } : null,
+          ...serializeIncident(newIncident),
+        },
       },
       { status: 201 }
     );
