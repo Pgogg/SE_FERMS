@@ -1,1 +1,281 @@
-.root {}
+/* AppNavbar.module.css — Floating rounded light-grey navigation bar with mobile drawer */
+
+.wrapper {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 500;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+  box-sizing: border-box;
+  font-family: var(--font-body);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-5);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+  min-height: 60px;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+.brand:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.logoImg {
+  display: block;
+}
+
+.brandText {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  letter-spacing: 0.05em;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+/* Center Role Links */
+.centerLinks {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+@media (min-width: 1024px) {
+  .centerLinks {
+    display: flex;
+  }
+}
+
+.navLink {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+  transition: all 150ms ease;
+}
+
+.navLink:hover {
+  color: var(--color-ink);
+  background-color: var(--color-bg-warm);
+}
+
+.navLink:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.navLinkActive {
+  color: var(--color-ink);
+  background-color: var(--color-bg-warm);
+  font-weight: 700;
+}
+
+/* Right Section */
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.userSection {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .userSection {
+    display: flex;
+  }
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guestSection {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .guestSection {
+    display: flex;
+  }
+}
+
+.logoutBtn {
+  font-size: 0.8125rem;
+}
+
+/* Mobile Hamburger Toggle */
+.menuToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.menuToggle:hover {
+  background-color: var(--color-bg-warm);
+}
+
+.menuToggle:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@media (min-width: 1024px) {
+  .menuToggle {
+    display: none;
+  }
+}
+
+/* Drawer & Backdrop */
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(17, 17, 17, 0.5);
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 150ms ease;
+}
+
+.drawer {
+  width: 100%;
+  max-width: 320px;
+  height: 100%;
+  background-color: var(--color-bg);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+  animation: slideLeft 200ms ease;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.drawerClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.drawerClose:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.drawerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.drawerUserInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.drawerDivider {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--space-3) 0;
+}
+
+.drawerLink {
+  padding: var(--space-3) var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease;
+}
+
+.drawerLink:hover,
+.drawerLinkActive {
+  background-color: var(--color-bg-warm);
+}
+
+.drawerBtnWrap {
+  text-decoration: none;
+}
+
+.drawerBtn {
+  width: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawerBackdrop,
+  .drawer {
+    animation: none;
+  }
+}

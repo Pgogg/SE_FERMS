@@ -1,1 +1,130 @@
-.root {}
+/* SeverityPicker.module.css — Four large severity selection cards */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-height: 90px;
+  transition: all 150ms ease;
+  font-family: inherit;
+}
+
+.card:hover:not(:disabled) {
+  border-color: var(--color-muted);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--space-2);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  transition: color 150ms ease;
+}
+
+.badge {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+/* Selected states by severity token */
+.low.selected {
+  border-color: var(--sev-low);
+  background-color: var(--color-bg-warm);
+}
+.low.selected .icon {
+  color: var(--sev-low);
+}
+
+.medium.selected {
+  border-color: var(--sev-medium);
+  background-color: var(--color-bg-warm);
+}
+.medium.selected .icon {
+  color: var(--sev-medium);
+}
+
+.high.selected {
+  border-color: var(--sev-high);
+  background-color: var(--color-brand-tint);
+}
+.high.selected .icon {
+  color: var(--sev-high);
+}
+
+.critical.selected {
+  border-color: var(--sev-critical);
+  background-color: var(--color-brand-tint);
+}
+.critical.selected .icon {
+  color: var(--sev-critical);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sev-critical);
+}

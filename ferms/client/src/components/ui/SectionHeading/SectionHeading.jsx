@@ -1,5 +1,22 @@
-// components/ui/SectionHeading/SectionHeading.jsx — Styled section title using --font-display with optional subtitle
+// components/ui/SectionHeading/SectionHeading.jsx — Section header with eyebrow, condensed heading, and intro
 import React from 'react';
 import styles from './SectionHeading.module.css';
 
-export default function SectionHeading({ children }) { return <h2 className={styles.root}>{children}</h2>; }
+export default function SectionHeading({
+  eyebrow,
+  title,
+  intro,
+  align = 'left',
+  className = '',
+  children,
+}) {
+  const displayTitle = title || children;
+
+  return (
+    <div className={`${styles.root} ${styles[align]} ${className}`}>
+      {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
+      {displayTitle && <h2 className={styles.title}>{displayTitle}</h2>}
+      {intro && <p className={styles.intro}>{intro}</p>}
+    </div>
+  );
+}

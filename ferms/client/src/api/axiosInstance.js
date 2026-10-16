@@ -16,7 +16,7 @@ const axiosInstance = axios.create({
   baseURL: import.meta.env?.VITE_API_URL || '/api',
 });
 
-// Request interceptor: injects JWT Bearer token
+// Request interceptor: injects JWT Bearer token and dev-mode role headers
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('ferms_token');
@@ -24,6 +24,27 @@ axiosInstance.interceptors.request.use(
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Dev-mode shim: the real Express server (non-production) reads x-dev-role /
+    // x-dev-station-id headers instead of verifying a real JWT.  Send these
+    // whenever we have a stored user so that real-API calls (bypassed by MSW via
+    // VITE_REAL_API_PREFIXES) authenticate correctly without a live JWT secret.
+    try {
+      const rawUser = localStorage.getItem('ferms_user');
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        if (user?.role) {
+          config.headers = config.headers || {};
+          config.headers['x-dev-role'] = user.role;
+          if (user.stationId != null) {
+            config.headers['x-dev-station-id'] = String(user.stationId);
+          }
+        }
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
