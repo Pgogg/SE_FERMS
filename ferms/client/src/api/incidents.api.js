@@ -24,15 +24,17 @@ export const listIncidents = async (params) => {
   return response.data;
 };
 
-export const getIncidentStats = async () => {
-  const response = await axiosInstance.get('/incidents/stats');
+export const getIncidentStats = async (params) => {
+  const response = await axiosInstance.get('/incidents/stats', { params });
   return response.data;
 };
 
-export const getAssignedIncidents = async () => {
+export const listAssigned = async () => {
   const response = await axiosInstance.get('/incidents/assigned');
   return response.data;
 };
+
+export const getAssignedIncidents = listAssigned;
 
 export const getIncident = async (id) => {
   const response = await axiosInstance.get(`/incidents/${id}`);

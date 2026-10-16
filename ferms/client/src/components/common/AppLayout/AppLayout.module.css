@@ -15,9 +15,11 @@
 }
 
 .contained {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-4) var(--space-9);
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-4) clamp(1rem, 2.5vw, 2.5rem) var(--space-9);
+  box-sizing: border-box;
 }
 
 .fullWidth {
