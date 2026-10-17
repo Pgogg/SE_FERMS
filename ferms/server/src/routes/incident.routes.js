@@ -28,6 +28,17 @@ router.get(
   allowRoles(ROLES.CITIZEN),
   incidentController.myIncidents
 );
+
+// PATCH /api/incidents/:id/assign — dispatch_operator, admin
+// Override station assignment. Body: { stationId }.
+// Allowed only while status is 'unassigned' or 'assigned' (Decision D1).
+// NOTE: registered before /:id/status and /:id/notes to ensure correct matching.
+router.patch(
+  '/:id/assign',
+  authenticate,
+  allowRoles(ROLES.DISPATCH_OPERATOR, ROLES.ADMIN),
+  incidentController.assignIncident
+);
 // ===== /Parth =====
 
 // ===== Vedant =====

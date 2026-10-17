@@ -143,17 +143,57 @@ const assignNearest = async (incident, { transaction } = {}) => {
  * Releases the previous vehicle(s) and reserves one at the target station.
  * Throws 409 CONFLICT if the target station has no available vehicle.
  *
- * Implementation deferred to Week 4.
+ * All DB mutations happen inside the provided transaction (or a new one if none given).
+ * After commit the caller should:
+ *   - notifyStationOnDuty (new station)
+ *   - notifyReporter
+ *   (incident:updated is already emitted by incident-state.service.transition)
  *
  * @param {object} incident   Sequelize Incident instance
  * @param {number} stationId  Target station id
- * @param {{ actorId?, transaction? }} opts
- * @returns {Promise<{ station, vehicle }>}
+ * @param {{ actorId?: number, transaction?: object }} opts
+ * @returns {Promise<{ station: Station, vehicle: Vehicle }>}
  */
 const reassign = async (incident, stationId, { actorId, transaction } = {}) => {
-  // TODO(week-4): check target station availability, release old vehicle(s),
-  //   reserve new vehicle, update incident.stationId, write history row.
-  throw new AppError(501, 'NOT_IMPLEMENTED', 'dispatch.service.reassign is not yet implemented.');
+  // 1. Lock a vehicle at the target station with FOR UPDATE
+  const newVehicle = await resourceService.getAvailableVehicle(stationId, { transaction });
+  if (!newVehicle) {
+    throw new AppError(409, 'CONFLICT', 'Target station has no available vehicle.');
+  }
+
+  const now = new Date();
+
+  // 2. Release previous vehicle(s) (set released_at, vehicle → 'available')
+  await resourceService.releaseVehicles(incident.id, { transaction });
+
+  // 3. Create new incident_vehicles row
+  await IncidentVehicle.create(
+    {
+      incidentId: incident.id,
+      vehicleId:  newVehicle.id,
+      assignedAt: now,
+      releasedAt: null,
+    },
+    { transaction }
+  );
+
+  // 4. Set new vehicle status to 'dispatched'
+  newVehicle.status = VEHICLE_STATUS.DISPATCHED;
+  await newVehicle.save({ transaction });
+
+  // 5. Update incident.stationId
+  incident.stationId = stationId;
+  await incident.save({ transaction });
+
+  // 6. Transition to 'assigned' (handles history row + emits incident:updated after commit)
+  const incidentStateService = require('./incident-state.service');
+  await incidentStateService.transition(incident, INCIDENT_STATUS.ASSIGNED, { actorId, transaction });
+
+  // Load the Station for the response
+  const station = await Station.findByPk(stationId, { transaction });
+
+  return { station, vehicle: newVehicle };
 };
 
 module.exports = { assignNearest, reassign };
+
