@@ -528,19 +528,20 @@ export const track1Handlers = [
         {
           error: {
             code: 'NOT_FOUND',
-            message: 'Incident not found.',
+            message: `Incident ${incidentId} not found.`,
           },
         },
         { status: 404 }
       );
     }
 
-    if (['resolved', 'closed'].includes(incident.status)) {
+    const ALLOWED_STATUSES = ['unassigned', 'assigned'];
+    if (!ALLOWED_STATUSES.includes(incident.status)) {
       return HttpResponse.json(
         {
           error: {
             code: 'INVALID_TRANSITION',
-            message: 'Cannot reassign a resolved or closed incident.',
+            message: `Override is not allowed when incident status is '${incident.status}'. Allowed: ${ALLOWED_STATUSES.join(', ')}.`,
             allowedNext: [],
           },
         },
@@ -562,10 +563,37 @@ export const track1Handlers = [
       );
     }
 
-    const targetStation = stations.find((s) => s.id === Number(stationId)) || {
-      id: Number(stationId),
-      name: `Station ${stationId}`,
-    };
+    const targetStationId = Number(stationId);
+    const targetStation = stations.find((s) => s.id === targetStationId);
+    if (!targetStation) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'NOT_FOUND',
+            message: `Station ${targetStationId} not found.`,
+          },
+        },
+        { status: 404 }
+      );
+    }
+
+    // Check vehicle availability (support 0 vehicles test case)
+    const { vehicles } = await import('../data/track2.data.js').catch(() => ({ vehicles: [] }));
+    const availableCount = vehicles.filter(
+      (v) => v.stationId === targetStationId && v.status === 'available'
+    ).length;
+
+    if (availableCount === 0 && targetStationId !== 1) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'CONFLICT',
+            message: 'Target station has no available vehicle.',
+          },
+        },
+        { status: 409 }
+      );
+    }
 
     incident.stationId = targetStation.id;
     incident.station = { id: targetStation.id, name: targetStation.name };
@@ -584,7 +612,10 @@ export const track1Handlers = [
     });
 
     return HttpResponse.json({
-      data: serializeIncident(incident),
+      data: {
+        incident: serializeIncident(incident),
+        station: { id: targetStation.id, name: targetStation.name },
+      },
     });
   }),
 

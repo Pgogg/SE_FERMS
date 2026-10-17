@@ -15,7 +15,8 @@ export const getMyIncidents = async () => {
 export const myIncidents = getMyIncidents;
 
 export const assignIncident = async (id, data) => {
-  const response = await axiosInstance.patch(`/incidents/${id}/assign`, data);
+  const payload = typeof data === 'object' && data !== null ? data : { stationId: data };
+  const response = await axiosInstance.patch(`/incidents/${id}/assign`, payload);
   return response.data;
 };
 // ===== /Parth =====
