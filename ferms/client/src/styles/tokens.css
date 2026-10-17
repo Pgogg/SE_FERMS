@@ -37,6 +37,12 @@
   --st-resolved: #16A34A;
   --st-closed: #98A2B3;
 
+  /* Map Markers */
+  --marker-pin-dark: var(--color-dark);
+  --marker-station-border: rgba(255, 255, 255, 0.4);
+  --marker-selected-ring: var(--color-brand);
+  --marker-shadow: 0 4px 12px rgba(17, 17, 17, 0.25);
+
   /* Typography */
   --font-display: 'Bebas Neue', 'Oswald', Impact, sans-serif;
   --font-body: 'Work Sans', system-ui, sans-serif;

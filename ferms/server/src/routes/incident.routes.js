@@ -70,6 +70,22 @@ router.get(
   asyncHandler(incidentController.getIncident)
 );
 
+// PATCH /api/incidents/:id/status (firefighter, station_officer)
+router.patch(
+  '/:id/status',
+  authenticate,
+  allowRoles(ROLES.FIREFIGHTER, ROLES.STATION_OFFICER),
+  asyncHandler(incidentController.updateStatus)
+);
+
+// POST /api/incidents/:id/notes (firefighter, station_officer)
+router.post(
+  '/:id/notes',
+  authenticate,
+  allowRoles(ROLES.FIREFIGHTER, ROLES.STATION_OFFICER),
+  asyncHandler(incidentController.addNote)
+);
+
 // ===== /Vedant =====
 
 module.exports = router;

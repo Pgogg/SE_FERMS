@@ -1,6 +1,5 @@
 // pages/dispatch/MonitoringDashboard/MonitoringDashboard.jsx — Dispatch and multi-station telemetry monitoring dashboard (§14.7)
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin } from 'lucide-react';
 import AppLayout from '../../../components/common/AppLayout/AppLayout';
 import SectionHeading from '../../../components/ui/SectionHeading/SectionHeading';
 import Card from '../../../components/ui/Card/Card';
@@ -12,6 +11,7 @@ import Button from '../../../components/ui/Button/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { useIncidents } from '../../../hooks/useIncidents';
 import { listStations } from '../../../api/stations.api';
+import LeafletMap from '../../../components/map/LeafletMap/LeafletMap';
 import IncidentSummaryModal from './IncidentSummaryModal';
 import styles from './MonitoringDashboard.module.css';
 
@@ -77,6 +77,23 @@ export default function MonitoringDashboard() {
 
   // Hook handles list + stats in parallel with params change dependency
   const { incidents, stats, loading, error, refetch } = useIncidents(queryParams);
+
+  // Incidents shown on map: closed incidents and those without coordinates are excluded
+  const mapIncidents = useMemo(
+    () =>
+      (incidents || []).filter(
+        (inc) =>
+          inc.status !== 'closed' &&
+          inc.latitude != null &&
+          inc.longitude != null
+      ),
+    [incidents]
+  );
+
+  // Handle selecting an incident from the map marker
+  const handleMarkerSelect = (incident) => {
+    setSelectedIncident(incident);
+  };
 
   // Handle clicking a StatTile to toggle filter by that status
   const handleStatClick = (statusKey) => {
@@ -300,21 +317,19 @@ export default function MonitoringDashboard() {
                   : 'No active incidents currently reported.'
               }
               onRowClick={(row) => setSelectedIncident(row)}
+              selectedId={selectedIncident?.id}
             />
           </div>
 
-          {/* Right Column: Card reserved for Map */}
+          {/* Right Column: Leaflet map (§14.7) */}
           <div className={styles.mapColumn}>
             <Card variant="light" className={styles.mapCard}>
-              <div className={styles.mapPlaceholder}>
-                <div className={styles.mapIconWrap} aria-hidden="true">
-                  <MapPin size={34} />
-                </div>
-                <h3 className={styles.mapPlaceholderTitle}>Map comes next</h3>
-                <p className={styles.mapPlaceholderText}>
-                  Interactive Leaflet map displaying fire station markers, active units, and flame markers color-coded by incident severity will render in this card.
-                </p>
-              </div>
+              <LeafletMap
+                stations={stations}
+                incidents={mapIncidents}
+                selectedId={selectedIncident?.id}
+                onSelectIncident={handleMarkerSelect}
+              />
             </Card>
           </div>
         </div>
