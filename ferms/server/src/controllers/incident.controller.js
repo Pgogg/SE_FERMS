@@ -182,6 +182,8 @@ const myIncidents = asyncHandler(async (req, res) => {
 // ===== /Parth =====
 
 // ===== Vedant =====
+const { allowedNext } = require('../domain/incident.transitions');
+const incidentStateService = require('../services/incident-state.service');
 
 /**
  * listIncidents
@@ -465,6 +467,169 @@ const getIncident = async (req, res) => {
   return res.json({ data });
 };
 
+/**
+ * updateStatus
+ * PATCH /api/incidents/:id/status (firefighter, station_officer)
+ * Body: { status }
+ * The caller's stationId must equal incident.stationId (403 otherwise).
+ * Only 'in_progress' is accepted here: if target is 'resolved' or 'closed',
+ * returns 400 INVALID_TRANSITION with message pointing to /resolve or /close.
+ * After commit: calls notification.notifyReporter(incident, 'Responders are on the way (status: In progress).').
+ */
+const updateStatus = async (req, res) => {
+  const { id } = req.params;
+  if (!/^\d+$/.test(id)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Incident ID must be a positive integer.');
+  }
+
+  const { status } = req.body;
+  if (!status) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Status is required.');
+  }
+
+  const incident = await Incident.findByPk(parseInt(id, 10), {
+    include: [{ model: Station, as: 'station', attributes: ['id', 'name'] }],
+  });
+
+  if (!incident) {
+    throw new AppError(404, 'NOT_FOUND', 'Incident not found.');
+  }
+
+  // The caller's stationId must equal incident.stationId (403 otherwise)
+  const callerStationId = req.user?.stationId;
+  if (!callerStationId || !incident.stationId || callerStationId !== incident.stationId) {
+    throw new AppError(403, 'FORBIDDEN', 'Incident is not assigned to your station.');
+  }
+
+  const allowed = allowedNext(incident.status);
+
+  // If target is 'resolved' or 'closed', point to dedicated endpoint
+  if (status === INCIDENT_STATUS.RESOLVED) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      'Use PATCH /api/incidents/:id/resolve to resolve an incident.',
+      { allowedNext: allowed }
+    );
+  }
+
+  if (status === INCIDENT_STATUS.CLOSED) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      'Use PATCH /api/incidents/:id/close to close an incident.',
+      { allowedNext: allowed }
+    );
+  }
+
+  // Only 'in_progress' is accepted here
+  if (status !== INCIDENT_STATUS.IN_PROGRESS) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      `Cannot move from ${incident.status} to ${status}.`,
+      { allowedNext: allowed }
+    );
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    await incidentStateService.transition(incident, status, {
+      actorId: req.user.id,
+      transaction,
+    });
+
+    transaction.afterCommit(() => {
+      notificationService.notifyReporter(
+        incident,
+        'Responders are on the way (status: In progress).'
+      );
+    });
+
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+
+  incident.Station = incident.station || incident.Station;
+  return res.json({ data: serializeIncident(incident) });
+};
+
+/**
+ * addNote
+ * POST /api/incidents/:id/notes (firefighter, station_officer)
+ * Body: { note } non-empty, up to 2000 characters.
+ * Not allowed on closed incidents (409).
+ * Return created note with author name. After commit: emit incident:updated.
+ */
+const addNote = async (req, res) => {
+  const { id } = req.params;
+  if (!/^\d+$/.test(id)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Incident ID must be a positive integer.');
+  }
+
+  const { note } = req.body;
+  if (!note || typeof note !== 'string' || note.trim().length === 0) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Note must not be empty.');
+  }
+  if (note.length > 2000) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Note must not exceed 2000 characters.');
+  }
+
+  const incident = await Incident.findByPk(parseInt(id, 10));
+  if (!incident) {
+    throw new AppError(404, 'NOT_FOUND', 'Incident not found.');
+  }
+
+  // Caller's stationId must equal incident.stationId (403 otherwise)
+  const callerStationId = req.user?.stationId;
+  if (!callerStationId || !incident.stationId || callerStationId !== incident.stationId) {
+    throw new AppError(403, 'FORBIDDEN', 'Incident is not assigned to your station.');
+  }
+
+  // Not allowed on closed incidents (409)
+  if (incident.status === INCIDENT_STATUS.CLOSED) {
+    throw new AppError(409, 'CONFLICT', 'Cannot add notes to a closed incident.');
+  }
+
+  let createdNote;
+  const transaction = await sequelize.transaction();
+  try {
+    createdNote = await IncidentNote.create(
+      {
+        incidentId: incident.id,
+        authorId:   req.user.id,
+        note:       note.trim(),
+        createdAt:  new Date(),
+      },
+      { transaction }
+    );
+
+    transaction.afterCommit(() => {
+      emitIncident('incident:updated', incident);
+    });
+
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+
+  const authorUser = await User.findByPk(req.user.id, { attributes: ['id', 'name'] });
+
+  const data = {
+    id:         createdNote.id,
+    incidentId: createdNote.incidentId,
+    authorId:   createdNote.authorId,
+    authorName: authorUser ? authorUser.name : (req.user?.name || null),
+    note:       createdNote.note,
+    createdAt:  createdNote.createdAt,
+  };
+
+  return res.status(201).json({ data });
+};
+
 // ===== /Vedant =====
 
 module.exports = {
@@ -479,5 +644,7 @@ module.exports = {
   incidentStats,
   assignedIncidents,
   getIncident,
+  updateStatus,
+  addNote,
   // ===== /Vedant =====
 };

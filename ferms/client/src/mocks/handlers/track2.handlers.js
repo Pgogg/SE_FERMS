@@ -71,6 +71,14 @@ function getUserFromRequest(request) {
   return null;
 }
 
+/**
+ * Per-incident in-memory stores so PATCH status and POST notes persist
+ * across requests within the same MSW session.
+ * Map<incidentId: number, Array>
+ */
+const incidentStatusHistory = new Map();
+const incidentNotes = new Map();
+
 export const track2Handlers = [
   // ==========================================
   // Stations Endpoints (§5.3)
@@ -771,7 +779,7 @@ export const track2Handlers = [
     });
   }),
 
-  // GET /api/incidents/:id (detail read)
+  // GET /api/incidents/:id (detail read) — enriched with statusHistory and notes
   http.get('*/api/incidents/:id', ({ request, params }) => {
     const caller = getUserFromRequest(request);
     if (!caller) {
@@ -807,25 +815,219 @@ export const track2Handlers = [
       );
     }
 
+    // Build rich status history from per-incident store
+    const history = incidentStatusHistory.get(id) || [
+      {
+        id: id * 100 + 1,
+        incidentId: id,
+        status: incident.status === 'assigned' || incident.status === 'in_progress' || incident.status === 'resolved' || incident.status === 'closed'
+          ? 'assigned'
+          : incident.status,
+        changedAt: incident.createdAt,
+        changedBy: null,
+        changedByName: 'System',
+      },
+    ];
+
+    // Add in_progress row if already in_progress or further
+    if (['in_progress', 'resolved', 'closed'].includes(incident.status) &&
+        !history.some((h) => h.status === 'in_progress')) {
+      history.push({
+        id: id * 100 + 2,
+        incidentId: id,
+        status: 'in_progress',
+        changedAt: incident.updatedAt,
+        changedBy: caller.id,
+        changedByName: caller.name,
+      });
+    }
+
+    const notes = incidentNotes.get(id) || [];
+
+    // Build assigned vehicles list from vehicles data
+    const assignedVehicles = vehicles
+      .filter((v) => v.stationId === incident.stationId && v.status === 'dispatched')
+      .slice(0, 1)
+      .map((v) => ({
+        vehicleId: v.id,
+        type: v.type,
+        registrationNo: v.registrationNo,
+        assignedAt: incident.updatedAt,
+        releasedAt: null,
+      }));
+
     return HttpResponse.json({
       data: {
         ...serializeIncident(incident),
-        station: incident.station || (incident.stationId ? { id: incident.stationId, name: `Station ${incident.stationId}` } : null),
-        statusHistory: [
-          {
-            id: 1,
-            incidentId: incident.id,
-            status: incident.status,
-            changedAt: incident.createdAt,
-            changedBy: 'System',
-          },
-        ],
-        notes: [],
-        vehicles: [],
+        station: incident.station || (incident.stationId ? stations.find((s) => s.id === incident.stationId) || { id: incident.stationId, name: `Station ${incident.stationId}` } : null),
+        statusHistory: history,
+        notes,
+        vehicles: assignedVehicles,
       },
     });
+  }),
+
+  // PATCH /api/incidents/:id/status — assigned → in_progress only
+  http.patch('*/api/incidents/:id/status', async ({ request, params }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['firefighter', 'station_officer'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Only station staff may update incident status.' } },
+        { status: 403 }
+      );
+    }
+
+    const id = Number(params.id);
+    const incident = incidents.find((i) => i.id === id);
+    if (!incident) {
+      return HttpResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Incident not found.' } },
+        { status: 404 }
+      );
+    }
+
+    // Station scope check
+    if (incident.stationId !== caller.stationId) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'This incident is not assigned to your station.' } },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { status: toStatus } = body;
+
+    if (!toStatus) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'status is required.' } },
+        { status: 400 }
+      );
+    }
+
+    // Validate transition (mirrors server domain/incident.transitions.js)
+    const ALLOWED = {
+      reported: ['assigned', 'unassigned'],
+      unassigned: ['assigned'],
+      assigned: ['in_progress', 'assigned'],
+      in_progress: ['resolved'],
+      resolved: ['closed'],
+      closed: [],
+    };
+
+    const allowedForCurrent = ALLOWED[incident.status] || [];
+    if (!allowedForCurrent.includes(toStatus)) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_TRANSITION',
+            message: `Cannot move from ${incident.status} to ${toStatus}.`,
+            allowedNext: allowedForCurrent,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Apply the transition
+    const now = new Date().toISOString();
+    incident.status = toStatus;
+    incident.updatedAt = now;
+
+    // Append to status history store
+    const history = incidentStatusHistory.get(id) || [
+      {
+        id: id * 100 + 1,
+        incidentId: id,
+        status: 'assigned',
+        changedAt: incident.createdAt,
+        changedBy: null,
+        changedByName: 'System',
+      },
+    ];
+    history.push({
+      id: Date.now(),
+      incidentId: id,
+      status: toStatus,
+      changedAt: now,
+      changedBy: caller.id,
+      changedByName: caller.name,
+    });
+    incidentStatusHistory.set(id, history);
+
+    return HttpResponse.json({ data: serializeIncident(incident) });
+  }),
+
+  // POST /api/incidents/:id/notes — add a field note
+  http.post('*/api/incidents/:id/notes', async ({ request, params }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['firefighter', 'station_officer'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Only station staff may add notes.' } },
+        { status: 403 }
+      );
+    }
+
+    const id = Number(params.id);
+    const incident = incidents.find((i) => i.id === id);
+    if (!incident) {
+      return HttpResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Incident not found.' } },
+        { status: 404 }
+      );
+    }
+
+    if (incident.stationId !== caller.stationId) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'This incident is not assigned to your station.' } },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { note } = body;
+
+    if (!note || typeof note !== 'string' || !note.trim()) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'note is required.' } },
+        { status: 400 }
+      );
+    }
+    if (note.trim().length > 2000) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'note must be at most 2000 characters.' } },
+        { status: 400 }
+      );
+    }
+
+    const newNote = {
+      id: Date.now(),
+      incidentId: id,
+      authorId: caller.id,
+      authorName: caller.name,
+      note: note.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const notes = incidentNotes.get(id) || [];
+    notes.push(newNote);
+    incidentNotes.set(id, notes);
+
+    return HttpResponse.json({ data: newNote }, { status: 201 });
   }),
 ];
 
 export const handlers = track2Handlers;
 export default track2Handlers;
+

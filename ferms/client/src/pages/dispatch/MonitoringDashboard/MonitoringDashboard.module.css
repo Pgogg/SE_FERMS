@@ -132,55 +132,18 @@
   top: 90px;
 }
 
-/* Map placeholder card */
+/* Map card — no padding; the map fills edge-to-edge inside the card */
 .mapCard {
   min-height: 480px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-card);
-  padding: var(--space-6);
-  text-align: center;
+  padding: 0;
+  overflow: hidden;
 }
 
-.mapPlaceholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  max-width: 380px;
-}
-
-.mapIconWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: var(--color-brand-tint);
-  color: var(--color-brand);
-  margin-bottom: var(--space-1);
-}
-
-.mapPlaceholderTitle {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 2rem;
-  letter-spacing: 0.04em;
-  color: var(--color-ink);
-  text-transform: uppercase;
-}
-
-.mapPlaceholderText {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  color: var(--color-muted);
-  line-height: 1.5;
-}
 
 /* ------------------------------------------ */
 /* Table Cell Formats                         */

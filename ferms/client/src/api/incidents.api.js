@@ -62,4 +62,9 @@ export const closeIncident = async (id) => {
   const response = await axiosInstance.patch(`/incidents/${id}/close`);
   return response.data;
 };
+
+// Convenience aliases used by IncidentDetail (W4-V-FE-2)
+export const updateStatus = updateIncidentStatus;
+export const addNote = addIncidentNote;
 // ===== /Vedant =====
+

@@ -1,1 +1,143 @@
-.root {}
+/* IncidentMarker.module.css — Custom Leaflet marker for incidents colour-coded by severity (§14.3) */
+
+.markerContainer {
+  background: transparent;
+  border: none;
+}
+
+.flameWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.flamePin {
+  filter: drop-shadow(var(--marker-shadow));
+  transition: transform 200ms ease, filter 200ms ease;
+  transform-origin: bottom center;
+}
+
+.flamePin:hover {
+  transform: scale(1.15);
+}
+
+.flameSvg {
+  display: block;
+}
+
+/* Selected marker styles: larger and highlighted */
+.isFlameSelected .flamePin {
+  filter: drop-shadow(0 0 8px var(--marker-selected-ring)) drop-shadow(0 4px 14px rgba(17, 17, 17, 0.4));
+  transform: scale(1.18);
+}
+
+/* Pulsing highlight ring for selected incident */
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.pulseRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  margin-left: -22px;
+  border-radius: var(--radius-pill);
+  background: var(--marker-selected-ring);
+  pointer-events: none;
+  animation: pulseGlow 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulseRing {
+    animation: none;
+    transform: scale(1.35);
+    opacity: 0.4;
+  }
+}
+
+/* Popup content */
+.popup {
+  min-width: 240px;
+}
+
+.popupContent {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 280px;
+}
+
+.popupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.incidentId {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-ink);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.badgeRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.incidentDesc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.incidentAddress {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.actionRow {
+  margin-top: var(--space-1);
+  display: flex;
+  justify-content: stretch;
+}
+
+.selectBtn {
+  width: 100%;
+}
