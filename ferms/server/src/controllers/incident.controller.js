@@ -179,7 +179,104 @@ const myIncidents = asyncHandler(async (req, res) => {
     meta: { count: incidents.length },
   });
 });
+
+/**
+ * assignIncident
+ * PATCH /api/incidents/:id/assign — dispatch_operator, admin
+ *
+ * Overrides the station assignment for an incident.
+ * Body: { stationId }
+ * Allowed only while status is 'unassigned' or 'assigned' (Decision D1).
+ * After commit: notifyStationOnDuty (new station), notifyReporter.
+ * incident:updated is already emitted by incident-state.service.transition.
+ *
+ * Responds with { data: { incident: serializeIncident(incident), station } }
+ */
+const assignIncident = asyncHandler(async (req, res) => {
+  const incidentId = parseInt(req.params.id, 10);
+  if (Number.isNaN(incidentId) || incidentId <= 0) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Invalid incident id.');
+  }
+
+  const { stationId } = req.body;
+  if (stationId === undefined || stationId === null) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'stationId is required.');
+  }
+  const targetStationId = parseInt(stationId, 10);
+  if (Number.isNaN(targetStationId) || targetStationId <= 0) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'stationId must be a positive integer.');
+  }
+
+  // Load target station (404 if not found)
+  const targetStation = await Station.findByPk(targetStationId);
+  if (!targetStation) {
+    throw new AppError(404, 'NOT_FOUND', `Station ${targetStationId} not found.`);
+  }
+
+  // Load incident
+  const incident = await Incident.findByPk(incidentId, {
+    include: [{ model: Station, as: 'station', attributes: ['id', 'name'] }],
+  });
+  if (!incident) {
+    throw new AppError(404, 'NOT_FOUND', `Incident ${incidentId} not found.`);
+  }
+
+  // Check allowed statuses (Decision D1: only 'unassigned' or 'assigned')
+  const ALLOWED_FOR_OVERRIDE = [INCIDENT_STATUS.UNASSIGNED, INCIDENT_STATUS.ASSIGNED];
+  if (!ALLOWED_FOR_OVERRIDE.includes(incident.status)) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      `Override is not allowed when incident status is '${incident.status}'. Allowed: ${ALLOWED_FOR_OVERRIDE.join(', ')}.`
+    );
+  }
+
+  // Run reassign in a transaction
+  let result;
+  const transaction = await sequelize.transaction();
+  try {
+    result = await dispatchService.reassign(incident, targetStationId, {
+      actorId: req.user.id,
+      transaction,
+    });
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+
+  const { station, vehicle } = result;
+
+  // After commit: notify new station's on-duty personnel (Notify.Dispatch)
+  if (station) {
+    await notificationService.notifyStationOnDuty(
+      station.id,
+      {
+        incidentId: incident.id,
+        type: NOTIFICATION_TYPE.DISPATCH,
+        message: `Incident #${incident.id} has been reassigned to your station.`,
+      }
+    );
+  }
+
+  // Notify reporter (Notify.Citizen)
+  await notificationService.notifyReporter(
+    incident,
+    `Your incident #${incident.id} has been reassigned to ${station ? station.name : 'a new station'}.`
+  );
+
+  // Refresh station on incident for serialization
+  incident.Station = station || null;
+
+  return res.json({
+    data: {
+      incident: serializeIncident(incident),
+      station: station ? { id: station.id, name: station.name } : null,
+    },
+  });
+});
 // ===== /Parth =====
+
 
 // ===== Vedant =====
 const { allowedNext } = require('../domain/incident.transitions');
@@ -636,7 +733,7 @@ module.exports = {
   // ===== Parth =====
   createIncident,
   myIncidents,
-  // assign,
+  assignIncident,
   // ===== /Parth =====
 
   // ===== Vedant =====
