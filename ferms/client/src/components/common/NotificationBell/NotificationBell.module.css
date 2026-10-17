@@ -1,1 +1,228 @@
-.root {}
+/* NotificationBell.module.css — Styling for notification bell, badge, dropdown Card, and items */
+
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bell Toggle Button */
+.bellBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.bellBtn:hover {
+  background-color: var(--color-bg-warm);
+}
+
+.bellBtn:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.bellIcon {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Unread Badge */
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  background-color: var(--st-unassigned);
+  color: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 2px var(--color-bg);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Dropdown Card */
+.dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-2);
+}
+
+.headerTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.headerTitle {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.unreadPill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  background-color: var(--color-brand-tint);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+}
+
+.markAllBtn {
+  border: none;
+  background: transparent;
+  color: var(--color-brand-text);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease, text-decoration 150ms ease;
+}
+
+.markAllBtn:hover {
+  text-decoration: underline;
+  background-color: var(--color-brand-tint);
+}
+
+.markAllBtn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+/* Body / List */
+.body {
+  max-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.emptyContainer {
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.listItem {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.listItem:last-child {
+  border-bottom: none;
+}
+
+/* Notification Item Button */
+.itemBtn {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg);
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+  font-family: var(--font-body);
+}
+
+.itemBtn:hover {
+  background-color: var(--color-bg-warm);
+}
+
+.itemBtn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
+
+.itemUnread {
+  background-color: var(--color-brand-tint);
+}
+
+.itemUnread:hover {
+  background-color: var(--color-bg-warm);
+}
+
+/* Unread indicator dot */
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.unreadDotActive {
+  background-color: var(--color-brand);
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemMessage {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.itemTime {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}

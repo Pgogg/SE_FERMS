@@ -25,9 +25,17 @@ import {
  */
 function getUserFromRequest(request) {
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  if (!authHeader) return null;
+  const devRole = request.headers.get('x-dev-role');
+
+  if (!authHeader) {
+    if (devRole) return users.find((u) => u.role === devRole) || null;
+    return null;
+  }
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  if (!token) return null;
+  if (!token) {
+    if (devRole) return users.find((u) => u.role === devRole) || null;
+    return null;
+  }
 
   const match = token.match(/fake-jwt-token-(\d+)/);
   if (match) {
@@ -40,6 +48,10 @@ function getUserFromRequest(request) {
 
   const byEmail = users.find((u) => u.email.toLowerCase() === token.toLowerCase());
   if (byEmail) return byEmail;
+
+  if (devRole) {
+    return users.find((u) => u.role === devRole) || null;
+  }
 
   return null;
 }
@@ -588,7 +600,73 @@ export const track1Handlers = [
     const url = new URL(request.url);
     const unreadOnly = url.searchParams.get('unread') === 'true';
 
-    const userNotifs = notifications.filter((n) => n.recipientId === recipientId);
+    let userNotifs = notifications.filter((n) => n.recipientId === recipientId);
+
+    // If caller has no notifications yet, seed role-appropriate demo notifications
+    if (userNotifs.length === 0) {
+      const now = new Date();
+      const role = caller?.role || 'citizen';
+      const roleNotifs = [];
+
+      if (role === 'dispatch_operator' || role === 'admin') {
+        roleNotifs.push(
+          {
+            id: getNextNotificationId(),
+            recipientId,
+            incidentId: 101,
+            type: 'dispatch',
+            message: 'New critical incident #101 reported at 45 Commercial Complex.',
+            readStatus: false,
+            createdAt: new Date(now.getTime() - 2 * 60 * 1000).toISOString(),
+          },
+          {
+            id: getNextNotificationId(),
+            recipientId,
+            incidentId: 102,
+            type: 'status_update',
+            message: 'Incident #102 at 12 Market Street has progressed to IN_PROGRESS.',
+            readStatus: false,
+            createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
+          },
+          {
+            id: getNextNotificationId(),
+            recipientId,
+            incidentId: 104,
+            type: 'status_update',
+            message: 'Incident #104 at 88 Harbour View Apartments has been resolved.',
+            readStatus: true,
+            createdAt: new Date(now.getTime() - 120 * 60 * 1000).toISOString(),
+          }
+        );
+      } else if (role === 'firefighter' || role === 'station_officer') {
+        roleNotifs.push(
+          {
+            id: getNextNotificationId(),
+            recipientId,
+            incidentId: 101,
+            type: 'dispatch',
+            message: 'Emergency dispatch: Respond to Incident #101 at 45 Commercial Complex.',
+            readStatus: false,
+            createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+          },
+          {
+            id: getNextNotificationId(),
+            recipientId,
+            incidentId: 102,
+            type: 'status_update',
+            message: 'Incident #102 marked in progress by Station 1 crew.',
+            readStatus: true,
+            createdAt: new Date(now.getTime() - 45 * 60 * 1000).toISOString(),
+          }
+        );
+      }
+
+      if (roleNotifs.length > 0) {
+        notifications.unshift(...roleNotifs);
+        userNotifs = notifications.filter((n) => n.recipientId === recipientId);
+      }
+    }
+
     const unreadCount = userNotifs.filter((n) => !n.readStatus).length;
     const filtered = unreadOnly ? userNotifs.filter((n) => !n.readStatus) : userNotifs;
 
