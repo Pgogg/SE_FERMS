@@ -3,40 +3,83 @@
 // CONVENTIONS §4 frozen interface:
 //   notify({ recipientId, incidentId, type, message }, { transaction }) -> Notification
 //   notifyStationOnDuty(stationId, { incidentId, type, message }, opts)  -> Notification[]
-//   notifyRole(role, payload, opts)                                       -> void
-//   notifyReporter(incident, message, opts)                               -> void
-//
-// STUB: All bodies log and return empty/null values.
-// Week 2: replace stubs with real DB writes + socket emits after transaction.afterCommit.
+//   notifyRole(role, payload, opts)                                       -> void / Notification[]
+//   notifyReporter(incident, message, opts)                               -> void / Notification
+'use strict';
+
+const { Notification, User } = require('../models');
+const { emitToUser } = require('../sockets');
+const { NOTIFICATION_TYPE } = require('../domain/constants');
 
 /**
  * notify
  * Creates a Notification row for a single recipient and emits notification:new
- * to user:<recipientId> after the transaction commits.
+ * to user:<recipientId> after the transaction commits (or immediately if no transaction).
  *
- * @param {{ recipientId, incidentId, type, message }} payload
- * @param {{ transaction? }} opts
- * @returns {Promise<null>}  Will return the created Notification in Week 2
+ * @param {{ recipientId: number, incidentId?: number|null, type: string, message: string }} payload
+ * @param {{ transaction?: object }} [opts]
+ * @returns {Promise<Notification>} The created Notification instance
  */
-const notify = async ({ recipientId, incidentId, type, message }, { transaction } = {}) => {
-  // TODO(week-2): create Notification row in DB, emit 'notification:new' to user:<recipientId> after commit
-  console.log('[notification.service] notify (stub)', { recipientId, incidentId, type, message });
-  return null;
+const notify = async ({ recipientId, incidentId = null, type, message }, { transaction } = {}) => {
+  const notification = await Notification.create(
+    {
+      recipientId,
+      incidentId: incidentId ?? null,
+      type,
+      message,
+    },
+    { transaction }
+  );
+
+  const emit = () => {
+    emitToUser(recipientId, 'notification:new', { notification });
+  };
+
+  if (transaction && typeof transaction.afterCommit === 'function') {
+    transaction.afterCommit(emit);
+  } else {
+    emit();
+  }
+
+  return notification;
 };
 
 /**
  * notifyStationOnDuty
- * Notifies every on-duty user at a station (users where station_id = stationId AND on_duty = true).
+ * Notifies every on-duty, active user at a station (users where station_id = stationId AND on_duty = true AND account_status = 'active').
  *
  * @param {number} stationId
- * @param {{ incidentId, type, message }} payload
- * @param {{ transaction? }} opts
- * @returns {Promise<[]>}  Will return Notification[] in Week 2
+ * @param {{ incidentId?: number|null, type: string, message: string }} payload
+ * @param {{ transaction?: object }} [opts]
+ * @returns {Promise<Notification[]>} Array of created Notification instances
  */
-const notifyStationOnDuty = async (stationId, { incidentId, type, message }, opts = {}) => {
-  // TODO(week-2): query on-duty users, call notify() for each, return array
-  console.log('[notification.service] notifyStationOnDuty (stub)', { stationId, incidentId, type, message });
-  return [];
+const notifyStationOnDuty = async (stationId, { incidentId = null, type, message }, opts = {}) => {
+  const users = await User.findAll({
+    where: {
+      stationId,
+      onDuty: true,
+      accountStatus: 'active',
+    },
+    transaction: opts.transaction,
+  });
+
+  if (!users || users.length === 0) {
+    return [];
+  }
+
+  return Promise.all(
+    users.map((user) =>
+      notify(
+        {
+          recipientId: user.id,
+          incidentId,
+          type,
+          message,
+        },
+        opts
+      )
+    )
+  );
 };
 
 /**
@@ -44,13 +87,37 @@ const notifyStationOnDuty = async (stationId, { incidentId, type, message }, opt
  * Notifies every active user with a given role.
  *
  * @param {string} role
- * @param {{ incidentId, type, message }} payload
- * @param {{ transaction? }} opts
- * @returns {Promise<void>}
+ * @param {{ incidentId?: number|null, type: string, message: string }} payload
+ * @param {{ transaction?: object }} [opts]
+ * @returns {Promise<Notification[]>} Array of created Notification instances
  */
 const notifyRole = async (role, payload, opts = {}) => {
-  // TODO(week-2): query all active users with the role, call notify() for each
-  console.log('[notification.service] notifyRole (stub)', { role, ...payload });
+  const { incidentId = null, type, message } = payload;
+  const users = await User.findAll({
+    where: {
+      role,
+      accountStatus: 'active',
+    },
+    transaction: opts.transaction,
+  });
+
+  if (!users || users.length === 0) {
+    return [];
+  }
+
+  return Promise.all(
+    users.map((user) =>
+      notify(
+        {
+          recipientId: user.id,
+          incidentId,
+          type,
+          message,
+        },
+        opts
+      )
+    )
+  );
 };
 
 /**
@@ -59,12 +126,30 @@ const notifyRole = async (role, payload, opts = {}) => {
  *
  * @param {object} incident  Sequelize Incident instance (must have reporterId)
  * @param {string} message
- * @param {{ transaction? }} opts
- * @returns {Promise<void>}
+ * @param {{ transaction?: object, type?: string }} [opts]
+ * @returns {Promise<Notification|null>}
  */
 const notifyReporter = async (incident, message, opts = {}) => {
-  // TODO(week-2): call notify({ recipientId: incident.reporterId, incidentId: incident.id, ... })
-  console.log('[notification.service] notifyReporter (stub)', { incidentId: incident.id, message });
+  if (!incident || !incident.reporterId) {
+    return null;
+  }
+
+  const type = opts?.type || NOTIFICATION_TYPE.STATUS_UPDATE;
+
+  return notify(
+    {
+      recipientId: incident.reporterId,
+      incidentId: incident.id,
+      type,
+      message,
+    },
+    opts
+  );
 };
 
-module.exports = { notify, notifyStationOnDuty, notifyRole, notifyReporter };
+module.exports = {
+  notify,
+  notifyStationOnDuty,
+  notifyRole,
+  notifyReporter,
+};
