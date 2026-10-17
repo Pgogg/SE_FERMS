@@ -1,1 +1,192 @@
-.root {}
+/* AssignOverride.module.css — Styles for AssignOverride modal, incident banner, station details card, and error alerts */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-family: var(--font-body);
+}
+
+/* Incident summary card inside modal */
+.incidentCard {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.incidentRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.incidentLabel {
+  font-weight: 600;
+  color: var(--color-muted);
+  min-width: 110px;
+}
+
+.incidentValue {
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.incidentDesc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.875rem;
+}
+
+.descText {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.4;
+  font-size: 0.875rem;
+}
+
+.currentStationBadge {
+  font-weight: 600;
+  color: var(--st-assigned);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+/* Status Warning alert */
+.statusWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-brand-tint);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-brand-text);
+  line-height: 1.4;
+}
+
+/* Server error banner */
+.errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-bg-warm);
+  border: 1px solid var(--sev-critical);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--sev-critical);
+  line-height: 1.4;
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.errorText {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* Form group */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.loadingWrap {
+  padding: var(--space-3) 0;
+}
+
+/* Station Details Card */
+.stationDetailCard {
+  background-color: var(--color-bg-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+}
+
+.stationDetailZero {
+  border-color: var(--sev-critical);
+  background-color: var(--color-bg-warm);
+}
+
+.stationDetailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.stationDetailName {
+  font-weight: 700;
+  color: var(--color-ink);
+  font-size: 0.9375rem;
+}
+
+.stationDetailDist {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.stationDetailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.countPositive {
+  color: var(--st-resolved);
+  font-weight: 700;
+}
+
+.countZero {
+  color: var(--sev-critical);
+  font-weight: 700;
+}
+
+.zeroVehiclesExplanation {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--sev-critical);
+  color: var(--sev-critical);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.currentStationNotice {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Modal Footer */
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+}
