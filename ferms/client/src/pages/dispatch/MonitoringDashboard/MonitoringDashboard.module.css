@@ -154,6 +154,48 @@
   gap: 2px;
   min-width: 0;
   width: 100%;
+  transition: background-color 200ms ease;
+}
+
+.highlightedDesc {
+  animation: pulseNew 2.5s ease-out;
+  background-color: var(--color-brand-tint);
+  border-left: 3px solid var(--color-brand);
+  padding-left: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.newBadge {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 11px;
+  background-color: var(--color-brand);
+  color: var(--color-ink);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+@keyframes pulseNew {
+  0% {
+    background-color: var(--color-brand-tint);
+    box-shadow: 0 0 0 4px var(--color-brand-tint);
+  }
+  50% {
+    background-color: #FFF8F0;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlightedDesc {
+    animation: none;
+    background-color: var(--color-brand-tint);
+  }
 }
 
 .descSnippet {

@@ -19,6 +19,36 @@
   box-shadow: 0 4px 20px rgba(17, 17, 17, 0.06);
 }
 
+/* Briefly highlighted card on real-time update per Requirement 1 */
+.highlighted {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand), 0 4px 20px rgba(255, 106, 0, 0.25);
+  animation: pulseHighlight 2s ease-out;
+}
+
+@keyframes pulseHighlight {
+  0% {
+    box-shadow: 0 0 0 4px var(--color-brand), 0 6px 24px rgba(255, 106, 0, 0.35);
+    background-color: var(--color-brand-tint);
+  }
+  50% {
+    box-shadow: 0 0 0 2px var(--color-brand), 0 4px 18px rgba(255, 106, 0, 0.2);
+    background-color: #FFFFFF;
+  }
+  100% {
+    box-shadow: 0 0 0 1px var(--color-brand), 0 2px 12px rgba(17, 17, 17, 0.03);
+    background-color: #FFFFFF;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlighted {
+    animation: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px var(--color-brand);
+  }
+}
+
 /* Header */
 .header {
   display: flex;

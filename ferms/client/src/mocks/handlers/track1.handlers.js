@@ -232,9 +232,13 @@ export const track1Handlers = [
   http.get('*/api/users', async ({ request }) => {
     const url = new URL(request.url);
     const role = url.searchParams.get('role');
+    const status = url.searchParams.get('status');
     let list = users;
     if (role) {
       list = list.filter((u) => u.role === role);
+    }
+    if (status) {
+      list = list.filter((u) => (u.accountStatus || 'active') === status);
     }
 
     return HttpResponse.json({
@@ -281,6 +285,18 @@ export const track1Handlers = [
           error: {
             code: 'VALIDATION_ERROR',
             message: `Role must be one of: ${validRoles.join(', ')}.`,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (['firefighter', 'station_officer'].includes(role) && !stationId) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: `stationId is required for role '${role}'.`,
           },
         },
         { status: 400 }
@@ -339,10 +355,41 @@ export const track1Handlers = [
     }
 
     const body = await request.json().catch(() => ({}));
+    if (body.email !== undefined) {
+      const newEmail = String(body.email).trim().toLowerCase();
+      const existing = users.find((u) => u.id !== userId && u.email.toLowerCase() === newEmail);
+      if (existing) {
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'CONFLICT',
+              message: 'Email is already registered.',
+            },
+          },
+          { status: 409 }
+        );
+      }
+      user.email = newEmail;
+    }
     if (body.name !== undefined) user.name = String(body.name).trim();
     if (body.phone !== undefined) user.phone = body.phone;
     if (body.stationId !== undefined) user.stationId = body.stationId ? Number(body.stationId) : null;
     if (body.onDuty !== undefined) user.onDuty = Boolean(body.onDuty);
+    if (body.role !== undefined) {
+      const validRoles = ['citizen', 'dispatch_operator', 'firefighter', 'station_officer', 'admin'];
+      if (!validRoles.includes(body.role)) {
+        return HttpResponse.json(
+          {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: `Role must be one of: ${validRoles.join(', ')}.`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+      user.role = body.role;
+    }
 
     return HttpResponse.json({
       data: serializeUser(user),
@@ -408,7 +455,7 @@ export const track1Handlers = [
         {
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Cannot deactivate your own account.',
+            message: 'You cannot deactivate your own account.',
           },
         },
         { status: 400 }

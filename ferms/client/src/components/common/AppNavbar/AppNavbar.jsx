@@ -113,8 +113,8 @@ export default function AppNavbar() {
             <div className={styles.userSection}>
               <NotificationBell />
               <div className={styles.userInfo}>
-                <span className={styles.userName}>{user.name || user.email}</span>
-                {user.role && <Badge variant="role" value={user.role} />}
+                <span className={styles.userName}>{user?.name || user?.email || 'User'}</span>
+                {user?.role && <Badge variant="role" value={user.role} />}
               </div>
               <Button
                 variant="ghost"

@@ -1,5 +1,5 @@
 // pages/citizen/MyReports/MyReports.jsx — Citizen page listing their reported incidents with live status Stepper
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import AppLayout from '../../../components/common/AppLayout/AppLayout';
@@ -8,15 +8,54 @@ import Button from '../../../components/ui/Button/Button';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState/EmptyState';
 import IncidentCard from '../../../components/incidents/IncidentCard/IncidentCard';
+import { useToast } from '../../../components/ui/Toast/Toast';
+import { useSocketEvent } from '../../../hooks/useSocketEvent';
+import { useOnReconnect } from '../../../context/SocketContext';
 import { myIncidents } from '../../../api/incidents.api';
 import styles from './MyReports.module.css';
 
+const STATUS_LABELS = {
+  reported: 'Reported',
+  unassigned: 'Needs dispatch',
+  assigned: 'Assigned',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+};
+
+function formatStatus(status) {
+  if (!status) return 'Updated';
+  return (
+    STATUS_LABELS[status] ||
+    status
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  );
+}
+
 export default function MyReports() {
-  // State variable holding the list of incidents — prepared for live updates next week
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [highlightedId, setHighlightedId] = useState(null);
+
+  const toast = useToast();
+  const incidentsRef = useRef(incidents);
+  const highlightTimerRef = useRef(null);
+
+  useEffect(() => {
+    incidentsRef.current = incidents;
+  }, [incidents]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
 
   /**
    * Fetches the calling citizen's incidents
@@ -50,6 +89,49 @@ export default function MyReports() {
   useEffect(() => {
     loadReports();
   }, [loadReports]);
+
+  // Requirement 2: Re-fetch reports list on socket reconnection so nothing is missed (§7.5, Reliability-1)
+  useOnReconnect(() => {
+    loadReports(true);
+  });
+
+  // Requirement 1 & 3: Subscribe to live incident:updated events and update in place
+  useSocketEvent('incident:updated', (payload) => {
+    const updated = payload?.incident || payload;
+    if (!updated?.id) return;
+
+    const existing = incidentsRef.current.find(
+      (item) => Number(item.id) === Number(updated.id)
+    );
+
+    // Requirement 1: ignore incidents that are not in the list
+    if (!existing) {
+      return;
+    }
+
+    // Requirement 3: Show a Toast like 'Your report #12 is now In progress'
+    const statusLabel = formatStatus(updated.status);
+    toast.show({
+      type: 'info',
+      message: `Your report #${updated.id} is now ${statusLabel}.`,
+    });
+
+    // Requirement 1: Briefly highlight the updated card (respects prefers-reduced-motion in CSS)
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+    }
+    setHighlightedId(Number(updated.id));
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightedId(null);
+    }, 2500);
+
+    // Requirement 1: update the matching incident in the list in place
+    setIncidents((prev) =>
+      prev.map((item) =>
+        Number(item.id) === Number(updated.id) ? { ...item, ...updated } : item
+      )
+    );
+  });
 
   return (
     <AppLayout>
@@ -155,7 +237,11 @@ export default function MyReports() {
 
             <div className={styles.cardsGrid}>
               {incidents.map((incident) => (
-                <IncidentCard key={incident.id} incident={incident} />
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  isHighlighted={Number(incident.id) === Number(highlightedId)}
+                />
               ))}
             </div>
           </main>

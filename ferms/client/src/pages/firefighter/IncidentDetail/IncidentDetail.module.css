@@ -371,6 +371,78 @@
   justify-content: flex-end;
 }
 
+/* ── Modal form styles for Resolve and Close ── */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.modalPrompt {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.summaryTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.summaryTextarea:focus {
+  border-color: var(--color-brand);
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.summaryTextarea.hasError {
+  border-color: var(--sev-high);
+}
+
+.counterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.counterText {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.counterText.overLimit {
+  color: var(--sev-critical);
+  font-weight: 600;
+}
+
+.modalError {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-brand-tint);
+  border-left: 3px solid var(--sev-critical);
+  color: var(--sev-critical);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
 /* ── Error / loading ── */
 .errorCard {
   padding: var(--space-5);

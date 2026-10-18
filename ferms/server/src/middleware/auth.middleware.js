@@ -1,25 +1,78 @@
 // middleware/auth.middleware.js — Verifies JWT from Authorization header and attaches user to req
-//
-// In Week 2 the real JWT path below the dev-mode block will be implemented.
-// For now, when NODE_ENV !== 'production', the middleware reads:
-//   x-dev-role       → req.user.role
-//   x-dev-station-id → req.user.stationId  (parsed as integer, or null)
-// so every route can be exercised without a real token during development.
+'use strict';
 
+const jwt = require('jsonwebtoken');
+const { User } = require('../models');
 const { AppError } = require('./error.middleware');
 
-// TODO(week-2): replace dev-mode stub with real JWT verification using jsonwebtoken.verify()
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme_supersecret';
 
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+
+  // 1. Real JWT path when Authorization: Bearer <token> is provided
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = jwt.verify(token, JWT_SECRET);
+      const userId = payload.userId !== undefined ? payload.userId : payload.id;
+      const user = await User.findByPk(userId);
+
+      if (!user) {
+        return next(new AppError(401, 'UNAUTHORIZED', 'User not found.'));
+      }
+
+      // Re-check account_status from DB (§9.1, §7.4, Requirement 2)
+      if (user.accountStatus === 'inactive') {
+        return next(new AppError(401, 'UNAUTHORIZED', 'Account is deactivated.'));
+      }
+
+      req.user = {
+        id:        user.id,
+        role:      user.role,
+        stationId: user.stationId,
+        onDuty:    user.onDuty,
+        name:      user.name,
+        email:     user.email,
+      };
+
+      return next();
+    } catch (err) {
+      if (err instanceof AppError) {
+        return next(err);
+      }
+      if (process.env.NODE_ENV !== 'production' && (req.headers['x-dev-role'] || token.startsWith('fake-jwt-token-'))) {
+        // Fall through to dev shortcut below when in development with mock tokens
+      } else {
+        return next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token.'));
+      }
+    }
+  }
+
+  // 2. Dev shortcut when NODE_ENV !== 'production' (x-dev-role headers)
   if (process.env.NODE_ENV !== 'production') {
-    // --- Dev shortcut: headers drive the fake user -------------------------
     const role      = req.headers['x-dev-role'] || 'admin';
     const stationId = req.headers['x-dev-station-id']
       ? parseInt(req.headers['x-dev-station-id'], 10)
       : null;
+    const devUserId = req.headers['x-dev-user-id']
+      ? parseInt(req.headers['x-dev-user-id'], 10)
+      : 0;
+
+    // Check account status if user exists
+    if (devUserId) {
+      try {
+        const devUser = await User.findByPk(devUserId);
+        if (devUser && devUser.accountStatus === 'inactive') {
+          return next(new AppError(401, 'UNAUTHORIZED', 'Account is deactivated.'));
+        }
+      } catch (e) {
+        // Ignore DB lookup error in dev fallback
+      }
+    }
 
     req.user = {
-      id:        0,          // placeholder; real JWT will carry the real id
+      id:        devUserId,
       role,
       stationId: Number.isNaN(stationId) ? null : stationId,
       onDuty:    false,
@@ -28,22 +81,7 @@ const authenticate = (req, res, next) => {
     return next();
   }
 
-  // TODO(week-2): production — verify Bearer JWT
-  // const authHeader = req.headers['authorization'];
-  // if (!authHeader || !authHeader.startsWith('Bearer ')) {
-  //   return next(new AppError(401, 'UNAUTHORIZED', 'Missing or malformed token.'));
-  // }
-  // const token = authHeader.split(' ')[1];
-  // try {
-  //   const payload = jwt.verify(token, process.env.JWT_SECRET);
-  //   // re-check account_status from DB here
-  //   req.user = { id: payload.userId, role: payload.role, stationId: payload.stationId };
-  //   next();
-  // } catch (e) {
-  //   next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token.'));
-  // }
-
-  return next(new AppError(401, 'UNAUTHORIZED', 'Authentication not yet implemented in production.'));
+  return next(new AppError(401, 'UNAUTHORIZED', 'Missing or malformed token.'));
 };
 
 module.exports = authenticate;

@@ -11,24 +11,52 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-async function prepareApp() {
-  if (import.meta.env.VITE_USE_MOCKS === 'true') {
-    const { worker } = await import('./mocks/browser');
-    await worker.start({
-      onUnhandledRequest: 'bypass',
-    });
-    console.log('[MSW] Mock service worker started.');
-  }
-}
-
-prepareApp()
-  .catch((err) => {
-    console.warn('[MSW] Mock service worker initialization failed, proceeding with app mount:', err);
-  })
-  .finally(() => {
-    ReactDOM.createRoot(document.getElementById('root')).render(
+let isMounted = false;
+function renderApp() {
+  if (isMounted) return;
+  isMounted = true;
+  const rootEl = document.getElementById('root');
+  if (rootEl) {
+    ReactDOM.createRoot(rootEl).render(
       <React.StrictMode>
         <App />
       </React.StrictMode>
     );
+  }
+}
+
+async function prepareApp() {
+  if (import.meta.env.VITE_USE_MOCKS === 'true') {
+    const startMsw = async () => {
+      const { worker } = await import('./mocks/browser');
+      await worker.start({
+        onUnhandledRequest: 'bypass',
+      });
+      console.log('[MSW] Mock service worker started.');
+    };
+
+    // Timeout MSW after 1500ms so browser never hangs on an unmounted blank screen
+    await Promise.race([
+      startMsw(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('MSW start timed out after 1500ms')), 1500)
+      ),
+    ]);
+  }
+}
+
+// Fallback: guaranteed render within 2000ms even if service worker hangs
+const fallbackTimer = setTimeout(() => {
+  console.warn('[FERMS] Fallback render triggered.');
+  renderApp();
+}, 2000);
+
+prepareApp()
+  .catch((err) => {
+    console.warn('[MSW] Mock service worker initialization warning, proceeding with app mount:', err);
+  })
+  .finally(() => {
+    clearTimeout(fallbackTimer);
+    renderApp();
   });
+

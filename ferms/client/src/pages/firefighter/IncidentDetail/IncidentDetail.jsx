@@ -10,7 +10,9 @@ import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import Stepper from '../../../components/ui/Stepper/Stepper';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../components/ui/Toast/Toast';
-import { getIncident, updateStatus, addNote } from '../../../api/incidents.api.js';
+import { getIncident, updateStatus, addNote, resolveIncident, closeIncident } from '../../../api/incidents.api.js';
+import Modal from '../../../components/ui/Modal/Modal';
+import { useSocketEvent } from '../../../hooks/useSocketEvent';
 import styles from './IncidentDetail.module.css';
 
 // Stepper steps per §14.7: Assigned → In Progress → Resolved → Closed
@@ -51,6 +53,7 @@ function vehicleTypeLabel(type) {
 }
 
 const NOTE_MAX = 2000;
+const SUMMARY_MAX = 4000;
 
 export default function IncidentDetail() {
   const { id } = useParams();
@@ -67,6 +70,17 @@ export default function IncidentDetail() {
   // Status transition state
   const [statusLoading, setStatusLoading] = useState(false);
   const [transitionError, setTransitionError] = useState(null);
+
+  // Resolve modal state per Requirement 1
+  const [resolveModalOpen, setResolveModalOpen] = useState(false);
+  const [closingSummary, setClosingSummary] = useState('');
+  const [resolveError, setResolveError] = useState(null);
+  const [resolveSubmitting, setResolveSubmitting] = useState(false);
+
+  // Close modal state per Requirement 1
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [closeError, setCloseError] = useState(null);
+  const [closeSubmitting, setCloseSubmitting] = useState(false);
 
   // Note form state
   const [noteText, setNoteText] = useState('');
@@ -89,6 +103,13 @@ export default function IncidentDetail() {
   useEffect(() => {
     fetchIncident();
   }, [fetchIncident]);
+
+  // Requirement 3: Live updates for this incident via Socket.IO
+  useSocketEvent('incident:updated', (payload) => {
+    const updated = payload?.incident || payload;
+    if (!updated?.id || Number(updated.id) !== Number(id)) return;
+    fetchIncident();
+  });
 
   // ── Status transition handler ──────────────────────────────
   const handleStatusTransition = useCallback(
@@ -114,6 +135,64 @@ export default function IncidentDetail() {
     },
     [id, incident, fetchIncident, toast]
   );
+
+  // ── Resolve Incident handler per Requirement 1 ────────────
+  const handleOpenResolveModal = () => {
+    setClosingSummary('');
+    setResolveError(null);
+    setResolveModalOpen(true);
+  };
+
+  const handleResolveSubmit = async (e) => {
+    if (e) e.preventDefault();
+    const trimmed = closingSummary.trim();
+    if (!trimmed) {
+      setResolveError('Closing summary is required.');
+      return;
+    }
+    if (trimmed.length > SUMMARY_MAX) {
+      setResolveError(`Closing summary must be at most ${SUMMARY_MAX} characters.`);
+      return;
+    }
+
+    try {
+      setResolveSubmitting(true);
+      setResolveError(null);
+      await resolveIncident(id, { closingSummary: trimmed });
+      toast.show({ type: 'success', message: 'Incident resolved and vehicles released.' });
+      setResolveModalOpen(false);
+      await fetchIncident();
+    } catch (err) {
+      const msg = err?.response?.data?.error?.message || err?.message || 'Failed to resolve incident.';
+      setResolveError(msg);
+      toast.show({ type: 'error', message: msg });
+    } finally {
+      setResolveSubmitting(false);
+    }
+  };
+
+  // ── Close Incident handler per Requirement 1 ──────────────
+  const handleOpenCloseModal = () => {
+    setCloseError(null);
+    setCloseModalOpen(true);
+  };
+
+  const handleCloseSubmit = async () => {
+    try {
+      setCloseSubmitting(true);
+      setCloseError(null);
+      await closeIncident(id);
+      toast.show({ type: 'success', message: 'Incident closed successfully.' });
+      setCloseModalOpen(false);
+      await fetchIncident();
+    } catch (err) {
+      const msg = err?.response?.data?.error?.message || err?.message || 'Failed to close incident.';
+      setCloseError(msg);
+      toast.show({ type: 'error', message: msg });
+    } finally {
+      setCloseSubmitting(false);
+    }
+  };
 
   // ── Note submission handler ──────────────────────────────
   const handleNoteSubmit = useCallback(
@@ -171,40 +250,30 @@ export default function IncidentDetail() {
     }
     if (status === 'in_progress') {
       return (
-        <>
-          <Button
-            variant="primary"
-            size="lg"
-            className={styles.actionBtn}
-            disabled
-            id="btn-resolve"
-            aria-describedby="resolve-hint"
-          >
-            Resolve Incident
-          </Button>
-          <p className={styles.actionHint} id="resolve-hint">
-            Resolve flow coming in Week 5.
-          </p>
-        </>
+        <Button
+          variant="primary"
+          size="lg"
+          className={styles.actionBtn}
+          loading={resolveSubmitting}
+          onClick={handleOpenResolveModal}
+          id="btn-resolve"
+        >
+          Resolve Incident
+        </Button>
       );
     }
-    if (status === 'resolved' && isStationOfficer) {
+    if (status === 'resolved' && (isStationOfficer || user?.role === 'admin')) {
       return (
-        <>
-          <Button
-            variant="dark"
-            size="lg"
-            className={styles.actionBtn}
-            disabled
-            id="btn-close"
-            aria-describedby="close-hint"
-          >
-            Close Incident
-          </Button>
-          <p className={styles.actionHint} id="close-hint">
-            Close flow coming in Week 5.
-          </p>
-        </>
+        <Button
+          variant="dark"
+          size="lg"
+          className={styles.actionBtn}
+          loading={closeSubmitting}
+          onClick={handleOpenCloseModal}
+          id="btn-close"
+        >
+          Close Incident
+        </Button>
       );
     }
     return null;
@@ -317,7 +386,7 @@ export default function IncidentDetail() {
         </Card>
 
         {/* ── Next status action ── */}
-        {status !== 'resolved' && status !== 'closed' && (
+        {status !== 'closed' && (
           <div className={styles.actionSection}>
             {transitionError && (
               <p className={styles.transitionError} role="alert">{transitionError}</p>
@@ -446,6 +515,107 @@ export default function IncidentDetail() {
             </form>
           )}
         </Card>
+
+        {/* ── Resolve Incident Modal per Requirement 1 ── */}
+        <Modal
+          open={resolveModalOpen}
+          onClose={() => !resolveSubmitting && setResolveModalOpen(false)}
+          title="Resolve Incident"
+          footer={
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => setResolveModalOpen(false)}
+                disabled={resolveSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleResolveSubmit}
+                loading={resolveSubmitting}
+                id="btn-confirm-resolve"
+              >
+                Submit Resolution
+              </Button>
+            </>
+          }
+        >
+          <form onSubmit={handleResolveSubmit} className={styles.modalForm}>
+            <p className={styles.modalPrompt}>
+              Provide a comprehensive closing summary documenting response actions, fire suppression status, casualties, and on-scene resolution before releasing resources.
+            </p>
+
+            {resolveError && (
+              <p className={styles.modalError} role="alert">
+                {resolveError}
+              </p>
+            )}
+
+            <textarea
+              className={`${styles.summaryTextarea} ${resolveError ? styles.hasError : ''}`}
+              rows={5}
+              placeholder="Enter incident closing summary (required)..."
+              value={closingSummary}
+              onChange={(e) => {
+                setClosingSummary(e.target.value);
+                if (resolveError) setResolveError(null);
+              }}
+              required
+              maxLength={SUMMARY_MAX}
+              aria-label="Closing Summary"
+            />
+
+            <div className={styles.counterRow}>
+              <span className={styles.actionHint}>Required field · up to 4000 characters</span>
+              <span
+                className={`${styles.counterText} ${closingSummary.length > 3900 ? styles.overLimit : ''}`}
+              >
+                {closingSummary.length} / {SUMMARY_MAX}
+              </span>
+            </div>
+          </form>
+        </Modal>
+
+        {/* ── Close Incident Modal per Requirement 1 ── */}
+        <Modal
+          open={closeModalOpen}
+          onClose={() => !closeSubmitting && setCloseModalOpen(false)}
+          title="Close Incident"
+          footer={
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => setCloseModalOpen(false)}
+                disabled={closeSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="dark"
+                onClick={handleCloseSubmit}
+                loading={closeSubmitting}
+                id="btn-confirm-close"
+              >
+                Confirm & Close
+              </Button>
+            </>
+          }
+        >
+          <div className={styles.modalForm}>
+            <p className={styles.modalPrompt}>
+              Are you sure you want to officially close <strong>Incident #{incident.id}</strong>?
+            </p>
+            <p className={styles.actionHint}>
+              This confirms all operational reports are verified and permanently archives the incident lifecycle.
+            </p>
+            {closeError && (
+              <p className={styles.modalError} role="alert">
+                {closeError}
+              </p>
+            )}
+          </div>
+        </Modal>
       </div>
     </AppLayout>
   );

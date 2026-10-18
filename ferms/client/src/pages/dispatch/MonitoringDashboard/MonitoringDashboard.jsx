@@ -1,5 +1,4 @@
-// pages/dispatch/MonitoringDashboard/MonitoringDashboard.jsx — Dispatch and multi-station telemetry monitoring dashboard (§14.7)
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '../../../components/common/AppLayout/AppLayout';
 import SectionHeading from '../../../components/ui/SectionHeading/SectionHeading';
 import Card from '../../../components/ui/Card/Card';
@@ -9,6 +8,8 @@ import Table from '../../../components/ui/Table/Table';
 import Badge from '../../../components/ui/Badge/Badge';
 import Button from '../../../components/ui/Button/Button';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../components/ui/Toast/Toast';
+import { useSocketEvent } from '../../../hooks/useSocketEvent';
 import { useIncidents } from '../../../hooks/useIncidents';
 import { listStations } from '../../../api/stations.api';
 import LeafletMap from '../../../components/map/LeafletMap/LeafletMap';
@@ -34,15 +35,52 @@ function formatAge(dateStr) {
 
 export default function MonitoringDashboard() {
   const { user } = useAuth();
+  const toast = useToast();
   const isStationOfficer = user?.role === 'station_officer';
+  const isDispatchRole = ['dispatch_operator', 'admin'].includes(user?.role);
 
   // Filters state
   const [statusFilter, setStatusFilter] = useState('');
   const [stationFilter, setStationFilter] = useState('');
   const [showClosed, setShowClosed] = useState(false);
 
+  // Highlight state for new incoming incidents
+  const [highlightedId, setHighlightedId] = useState(null);
+  const highlightTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
+
   // Modal inspection state
   const [selectedIncident, setSelectedIncident] = useState(null);
+
+  // Requirement 4: Toast on relevant events for dispatch roles & Requirement 3: Highlight new incident
+  useSocketEvent('incident:new', (payload) => {
+    const newInc = payload?.incident || payload;
+    if (!newInc?.id) return;
+
+    if (isDispatchRole || (isStationOfficer && newInc.stationId === user?.stationId)) {
+      const severityStr = newInc.severity ? `[${newInc.severity.toUpperCase()}] ` : '';
+      const addressStr = newInc.address ? ` at ${newInc.address}` : '';
+      toast.show({
+        type: 'info',
+        message: `🚨 New incident #${newInc.id} ${severityStr}reported${addressStr}`,
+      });
+    }
+
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+    }
+    setHighlightedId(Number(newInc.id));
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightedId(null);
+    }, 3500);
+  });
 
   // Available fire stations for filter dropdown
   const [stations, setStations] = useState([]);
@@ -129,7 +167,14 @@ export default function MonitoringDashboard() {
       key: 'description',
       header: 'Incident',
       render: (row) => (
-        <div className={styles.descSnippetWrap}>
+        <div
+          className={`${styles.descSnippetWrap} ${
+            Number(row.id) === Number(highlightedId) ? styles.highlightedDesc : ''
+          }`}
+        >
+          {Number(row.id) === Number(highlightedId) && (
+            <span className={styles.newBadge}>NEW</span>
+          )}
           <span className={styles.descSnippet} title={row.description}>
             {row.description}
           </span>
@@ -327,7 +372,7 @@ export default function MonitoringDashboard() {
               <LeafletMap
                 stations={stations}
                 incidents={mapIncidents}
-                selectedId={selectedIncident?.id}
+                selectedId={selectedIncident?.id || highlightedId}
                 onSelectIncident={handleMarkerSelect}
               />
             </Card>
