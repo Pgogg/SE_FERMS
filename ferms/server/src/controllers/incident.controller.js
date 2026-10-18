@@ -281,6 +281,7 @@ const assignIncident = asyncHandler(async (req, res) => {
 // ===== Vedant =====
 const { allowedNext } = require('../domain/incident.transitions');
 const incidentStateService = require('../services/incident-state.service');
+const resourceService = require('../services/resource.service');
 
 /**
  * listIncidents
@@ -727,6 +728,161 @@ const addNote = async (req, res) => {
   return res.status(201).json({ data });
 };
 
+/**
+ * resolveIncident
+ * PATCH /api/incidents/:id/resolve (firefighter, station_officer of the incident's station)
+ * Body: { closingSummary } required, non-empty, up to 4000 characters.
+ * Only valid from 'in_progress' (else 400 INVALID_TRANSITION with allowedNext).
+ * In ONE transaction: store closingSummary, transition to 'resolved', release vehicles.
+ * After commit: notify reporter that incident has been resolved.
+ * Returns { data: { incident: serializeIncident(incident) } }.
+ */
+const resolveIncident = async (req, res) => {
+  const { id } = req.params;
+  if (!/^\d+$/.test(id)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Incident ID must be a positive integer.');
+  }
+
+  const { closingSummary } = req.body || {};
+  if (
+    closingSummary === undefined ||
+    closingSummary === null ||
+    typeof closingSummary !== 'string' ||
+    closingSummary.trim().length === 0
+  ) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'closingSummary is required.');
+  }
+  if (closingSummary.length > 4000) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'closingSummary must not exceed 4000 characters.');
+  }
+
+  const incident = await Incident.findByPk(parseInt(id, 10), {
+    include: [{ model: Station, as: 'station', attributes: ['id', 'name'] }],
+  });
+
+  if (!incident) {
+    throw new AppError(404, 'NOT_FOUND', 'Incident not found.');
+  }
+
+  // Station check: caller's stationId must match incident.stationId (403 otherwise)
+  const callerStationId = req.user?.stationId;
+  if (!callerStationId || !incident.stationId || callerStationId !== incident.stationId) {
+    throw new AppError(403, 'FORBIDDEN', 'Incident is not assigned to your station.');
+  }
+
+  // Only valid from 'in_progress'
+  if (incident.status !== INCIDENT_STATUS.IN_PROGRESS) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      `Cannot move from ${incident.status} to ${INCIDENT_STATUS.RESOLVED}.`,
+      { allowedNext: allowedNext(incident.status) }
+    );
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    incident.closingSummary = closingSummary.trim();
+    await incident.save({ transaction });
+
+    await incidentStateService.transition(incident, INCIDENT_STATUS.RESOLVED, {
+      actorId: req.user.id,
+      transaction,
+    });
+
+    await resourceService.releaseVehicles(incident.id, { transaction });
+
+    transaction.afterCommit(() => {
+      notificationService.notifyReporter(
+        incident,
+        'Your reported incident has been resolved.'
+      ).catch((err) => {
+        console.error('[Notification Error]:', err.message);
+      });
+    });
+
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+
+  incident.Station = incident.station || incident.Station;
+  return res.json({
+    data: {
+      incident: serializeIncident(incident),
+    },
+  });
+};
+
+/**
+ * closeIncident
+ * PATCH /api/incidents/:id/close (station_officer of the incident's station only; 403 for others)
+ * Only valid from 'resolved' (else 400 INVALID_TRANSITION with allowedNext).
+ * Transitions incident to 'closed'.
+ * After commit: notify reporter that it is closed.
+ * Returns { data: { incident: serializeIncident(incident) } }.
+ */
+const closeIncident = async (req, res) => {
+  const { id } = req.params;
+  if (!/^\d+$/.test(id)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Incident ID must be a positive integer.');
+  }
+
+  const incident = await Incident.findByPk(parseInt(id, 10), {
+    include: [{ model: Station, as: 'station', attributes: ['id', 'name'] }],
+  });
+
+  if (!incident) {
+    throw new AppError(404, 'NOT_FOUND', 'Incident not found.');
+  }
+
+  // Station check: caller's stationId must match incident.stationId (403 otherwise)
+  const callerStationId = req.user?.stationId;
+  if (!callerStationId || !incident.stationId || callerStationId !== incident.stationId) {
+    throw new AppError(403, 'FORBIDDEN', 'Incident is not assigned to your station.');
+  }
+
+  // Only valid from 'resolved'
+  if (incident.status !== INCIDENT_STATUS.RESOLVED) {
+    throw new AppError(
+      400,
+      'INVALID_TRANSITION',
+      `Cannot move from ${incident.status} to ${INCIDENT_STATUS.CLOSED}.`,
+      { allowedNext: allowedNext(incident.status) }
+    );
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    await incidentStateService.transition(incident, INCIDENT_STATUS.CLOSED, {
+      actorId: req.user.id,
+      transaction,
+    });
+
+    transaction.afterCommit(() => {
+      notificationService.notifyReporter(
+        incident,
+        'Your reported incident has been closed.'
+      ).catch((err) => {
+        console.error('[Notification Error]:', err.message);
+      });
+    });
+
+    await transaction.commit();
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+
+  incident.Station = incident.station || incident.Station;
+  return res.json({
+    data: {
+      incident: serializeIncident(incident),
+    },
+  });
+};
+
 // ===== /Vedant =====
 
 module.exports = {
@@ -743,5 +899,7 @@ module.exports = {
   getIncident,
   updateStatus,
   addNote,
+  resolveIncident,
+  closeIncident,
   // ===== /Vedant =====
 };
