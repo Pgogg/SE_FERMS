@@ -87,7 +87,7 @@ const createIncident = asyncHandler(async (req, res) => {
   // --- One transaction: create incident, first history row, dispatch ---
   const transaction = await sequelize.transaction();
   try {
-    // Create incident with status 'reported'
+    const now = new Date();
     incident = await Incident.create(
       {
         reporterId:  req.user.id,
@@ -98,6 +98,8 @@ const createIncident = asyncHandler(async (req, res) => {
         severity,
         status:      INCIDENT_STATUS.REPORTED,
         stationId:   null,
+        createdAt:   now,
+        updatedAt:   now,
       },
       { transaction }
     );
