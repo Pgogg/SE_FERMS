@@ -10,6 +10,8 @@ import Button from '../../../components/ui/Button/Button';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState/EmptyState';
 import { listAssigned } from '../../../api/incidents.api.js';
+import { useSocketEvent } from '../../../hooks/useSocketEvent';
+import { useOnReconnect } from '../../../context/SocketContext';
 import styles from './MyAssignments.module.css';
 
 /**
@@ -52,6 +54,25 @@ export default function MyAssignments() {
   useEffect(() => {
     fetchAssigned();
   }, [fetchAssigned]);
+
+  // Requirement 3: Live updates for assignments on reconnect (§7.5)
+  useOnReconnect(() => {
+    fetchAssigned();
+  });
+
+  // Requirement 3: Live updates on incident:updated
+  useSocketEvent('incident:updated', (payload) => {
+    const updated = payload?.incident || payload;
+    if (!updated?.id) return;
+
+    setIncidents((prev) => {
+      const exists = prev.some((i) => Number(i.id) === Number(updated.id));
+      if (exists) {
+        return prev.map((i) => (Number(i.id) === Number(updated.id) ? { ...i, ...updated } : i));
+      }
+      return prev;
+    });
+  });
 
   return (
     <AppLayout>

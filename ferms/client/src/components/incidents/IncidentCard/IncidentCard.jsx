@@ -39,7 +39,7 @@ function formatRelativeTime(dateStr) {
   });
 }
 
-export default function IncidentCard({ incident, className = '' }) {
+export default function IncidentCard({ incident, className = '', isHighlighted = false }) {
   if (!incident) return null;
 
   // Requirement 2: unassigned shows as Reported on the Stepper with the 'Needs dispatch' Badge
@@ -63,7 +63,10 @@ export default function IncidentCard({ incident, className = '' }) {
         : 'Assigned shortly';
 
   return (
-    <Card variant="light" className={`${styles.card} ${className}`}>
+    <Card
+      variant="light"
+      className={`${styles.card} ${isHighlighted ? styles.highlighted : ''} ${className}`.trim()}
+    >
       {/* Top Header: ID, Badges, Time */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>

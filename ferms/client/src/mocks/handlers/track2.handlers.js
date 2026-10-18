@@ -1026,6 +1026,159 @@ export const track2Handlers = [
 
     return HttpResponse.json({ data: newNote }, { status: 201 });
   }),
+
+  // PATCH /api/incidents/:id/resolve — in_progress → resolved + release vehicles
+  http.patch('*/api/incidents/:id/resolve', async ({ request, params }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['firefighter', 'station_officer', 'admin'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Only station crew or administrators may resolve incidents.' } },
+        { status: 403 }
+      );
+    }
+
+    const id = Number(params.id);
+    const incident = incidents.find((i) => i.id === id);
+    if (!incident) {
+      return HttpResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Incident not found.' } },
+        { status: 404 }
+      );
+    }
+
+    if (caller.role !== 'admin' && incident.stationId !== caller.stationId) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'This incident is not assigned to your station.' } },
+        { status: 403 }
+      );
+    }
+
+    if (incident.status !== 'in_progress') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_TRANSITION',
+            message: `Cannot resolve incident from status '${incident.status}'. Only valid from 'in_progress'.`,
+            allowedNext: incident.status === 'assigned' ? ['in_progress', 'assigned'] : [],
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { closingSummary } = body;
+    if (!closingSummary || typeof closingSummary !== 'string' || !closingSummary.trim()) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Closing summary is required.' } },
+        { status: 400 }
+      );
+    }
+    if (closingSummary.trim().length > 4000) {
+      return HttpResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Closing summary must be at most 4000 characters.' } },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    incident.closingSummary = closingSummary.trim();
+    incident.status = 'resolved';
+    incident.updatedAt = now;
+
+    // Release vehicles assigned to this incident station
+    if (incident.stationId) {
+      vehicles.forEach((v) => {
+        if (v.stationId === incident.stationId && v.status === 'dispatched') {
+          v.status = 'available';
+        }
+      });
+    }
+
+    // Append to status history
+    const history = incidentStatusHistory.get(id) || [];
+    history.push({
+      id: Date.now(),
+      incidentId: id,
+      status: 'resolved',
+      changedAt: now,
+      changedBy: caller.id,
+      changedByName: caller.name,
+    });
+    incidentStatusHistory.set(id, history);
+
+    return HttpResponse.json({ data: serializeIncident(incident) });
+  }),
+
+  // PATCH /api/incidents/:id/close — resolved → closed (station_officer or admin only)
+  http.patch('*/api/incidents/:id/close', async ({ request, params }) => {
+    const caller = getUserFromRequest(request);
+    if (!caller) {
+      return HttpResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 }
+      );
+    }
+    if (!['station_officer', 'admin'].includes(caller.role)) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Only station officers or administrators may close incidents.' } },
+        { status: 403 }
+      );
+    }
+
+    const id = Number(params.id);
+    const incident = incidents.find((i) => i.id === id);
+    if (!incident) {
+      return HttpResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Incident not found.' } },
+        { status: 404 }
+      );
+    }
+
+    if (caller.role !== 'admin' && incident.stationId !== caller.stationId) {
+      return HttpResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'This incident is not assigned to your station.' } },
+        { status: 403 }
+      );
+    }
+
+    if (incident.status !== 'resolved') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_TRANSITION',
+            message: `Cannot close incident from status '${incident.status}'. Only valid from 'resolved'.`,
+            allowedNext: incident.status === 'in_progress' ? ['resolved'] : [],
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    incident.status = 'closed';
+    incident.updatedAt = now;
+
+    // Append to status history
+    const history = incidentStatusHistory.get(id) || [];
+    history.push({
+      id: Date.now(),
+      incidentId: id,
+      status: 'closed',
+      changedAt: now,
+      changedBy: caller.id,
+      changedByName: caller.name,
+    });
+    incidentStatusHistory.set(id, history);
+
+    return HttpResponse.json({ data: serializeIncident(incident) });
+  }),
 ];
 
 export const handlers = track2Handlers;

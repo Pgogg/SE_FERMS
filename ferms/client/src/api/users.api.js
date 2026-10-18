@@ -1,8 +1,8 @@
 // api/users.api.js — Functions for user management API calls (§5.5)
 import axiosInstance from './axiosInstance.js';
 
-export const listUsers = async () => {
-  const response = await axiosInstance.get('/users');
+export const listUsers = async (params = {}) => {
+  const response = await axiosInstance.get('/users', { params });
   return response.data;
 };
 
@@ -17,7 +17,8 @@ export const updateUser = async (id, data) => {
 };
 
 export const updateUserRole = async (id, data) => {
-  const response = await axiosInstance.patch(`/users/${id}/role`, data);
+  const payload = typeof data === 'string' ? { role: data } : data;
+  const response = await axiosInstance.patch(`/users/${id}/role`, payload);
   return response.data;
 };
 

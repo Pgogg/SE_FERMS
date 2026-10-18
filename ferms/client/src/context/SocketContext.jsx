@@ -27,8 +27,16 @@ let sharedSocket = null;
 let sharedConnected = false;
 let currentToken = null;
 const listeners = new Set();
+let socketSnapshot = { socket: null, connected: false };
+
+function updateSocketSnapshot() {
+  if (socketSnapshot.socket !== sharedSocket || socketSnapshot.connected !== sharedConnected) {
+    socketSnapshot = { socket: sharedSocket, connected: sharedConnected };
+  }
+}
 
 function notifyListeners() {
+  updateSocketSnapshot();
   for (const listener of listeners) {
     listener();
   }
@@ -40,7 +48,7 @@ function subscribeSocket(listener) {
 }
 
 function getSocketSnapshot() {
-  return { socket: sharedSocket, connected: sharedConnected };
+  return socketSnapshot;
 }
 
 function initOrUpdateSocket(token, isAuthenticated) {
@@ -123,10 +131,13 @@ export function SocketProvider({ children }) {
     initOrUpdateSocket(token, isAuthenticated);
   }, [token, isAuthenticated]);
 
-  const value = {
-    socket: socketState.socket,
-    connected: socketState.connected,
-  };
+  const value = React.useMemo(
+    () => ({
+      socket: socketState.socket,
+      connected: socketState.connected,
+    }),
+    [socketState.socket, socketState.connected]
+  );
 
   return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 }
@@ -139,19 +150,19 @@ export function SocketProvider({ children }) {
  */
 export const useSocket = () => {
   const ctx = useContext(SocketContext);
-  const fallback = useSyncExternalStore(subscribeSocket, getSocketSnapshot);
   const { token, isAuthenticated } = useAuth();
 
-  // If not inside SocketProvider, ensure socket lifecycle is activated
-  useEffect(() => {
-    if (!ctx) {
-      initOrUpdateSocket(token, isAuthenticated);
-    }
-  }, [ctx, token, isAuthenticated]);
-
-  if (ctx && (ctx.socket || ctx.connected !== undefined)) {
+  // If inside SocketProvider, return context value directly
+  if (ctx && (ctx.socket !== undefined || ctx.connected !== undefined)) {
     return ctx;
   }
+
+  // Resilient fallback outside SocketProvider
+  const fallback = useSyncExternalStore(subscribeSocket, getSocketSnapshot);
+
+  useEffect(() => {
+    initOrUpdateSocket(token, isAuthenticated);
+  }, [token, isAuthenticated]);
 
   return fallback;
 };

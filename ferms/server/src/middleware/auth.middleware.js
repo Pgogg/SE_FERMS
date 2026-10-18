@@ -41,7 +41,11 @@ const authenticate = async (req, res, next) => {
       if (err instanceof AppError) {
         return next(err);
       }
-      return next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token.'));
+      if (process.env.NODE_ENV !== 'production' && (req.headers['x-dev-role'] || token.startsWith('fake-jwt-token-'))) {
+        // Fall through to dev shortcut below when in development with mock tokens
+      } else {
+        return next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token.'));
+      }
     }
   }
 

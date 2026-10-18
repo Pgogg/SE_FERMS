@@ -109,19 +109,26 @@ async function performLogout() {
   setGlobalAuth({ token: null, user: null, loading: false });
 }
 
-// On initial module load: if a token exists, validate with GET /auth/me
-if (globalState.token) {
+// On initial module load: if a real token exists, validate with GET /auth/me
+if (globalState.token && !globalState.token.startsWith('fake-jwt-token-')) {
   getMe()
     .then((envelope) => {
       const freshUser = envelope?.data ?? null;
       writeLocal(USER_KEY, freshUser);
       setGlobalAuth({ user: freshUser, loading: false });
     })
-    .catch(() => {
-      writeLocal(TOKEN_KEY, null);
-      writeLocal(USER_KEY, null);
-      setGlobalAuth({ token: null, user: null, loading: false });
+    .catch((err) => {
+      if (err?.status === 401) {
+        writeLocal(TOKEN_KEY, null);
+        writeLocal(USER_KEY, null);
+        setGlobalAuth({ token: null, user: null, loading: false });
+      } else {
+        setGlobalAuth({ loading: false });
+      }
     });
+} else {
+  // Mock token or no token: keep user from localStorage and finish loading
+  setGlobalAuth({ loading: false });
 }
 
 /**
@@ -131,15 +138,18 @@ if (globalState.token) {
 export function AuthProvider({ children }) {
   const state = useSyncExternalStore(subscribe, getSnapshot);
 
-  const value = {
-    user: state.user,
-    token: state.token,
-    loading: state.loading,
-    isAuthenticated: Boolean(state.token && state.user),
-    login: useCallback(performLogin, []),
-    register: useCallback(performRegister, []),
-    logout: useCallback(performLogout, []),
-  };
+  const value = React.useMemo(
+    () => ({
+      user: state.user,
+      token: state.token,
+      loading: state.loading,
+      isAuthenticated: Boolean(state.token && state.user),
+      login: performLogin,
+      register: performRegister,
+      logout: performLogout,
+    }),
+    [state.user, state.token, state.loading]
+  );
 
   return (
     <AuthContext.Provider value={value}>
