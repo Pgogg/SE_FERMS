@@ -1,6 +1,5 @@
-// pages/citizen/MyReports/MyReports.jsx — Citizen page listing their reported incidents with live status Stepper
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PlusCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import AppLayout from '../../../components/common/AppLayout/AppLayout';
 import SectionHeading from '../../../components/ui/SectionHeading/SectionHeading';
@@ -35,6 +34,7 @@ function formatStatus(status) {
 }
 
 export default function MyReports() {
+  const location = useLocation();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,6 +48,30 @@ export default function MyReports() {
   useEffect(() => {
     incidentsRef.current = incidents;
   }, [incidents]);
+
+  // Handle click-through from NotificationBell via location.state.highlightId
+  useEffect(() => {
+    if (location.state?.highlightId && incidents.length > 0) {
+      const targetId = Number(location.state.highlightId);
+      setHighlightedId(targetId);
+
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`incident-${targetId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+      }
+      highlightTimerRef.current = setTimeout(() => {
+        setHighlightedId(null);
+      }, 3500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state, incidents]);
 
   useEffect(() => {
     return () => {
@@ -237,11 +261,12 @@ export default function MyReports() {
 
             <div className={styles.cardsGrid}>
               {incidents.map((incident) => (
-                <IncidentCard
-                  key={incident.id}
-                  incident={incident}
-                  isHighlighted={Number(incident.id) === Number(highlightedId)}
-                />
+                <div key={incident.id} id={`incident-${incident.id}`}>
+                  <IncidentCard
+                    incident={incident}
+                    isHighlighted={Number(incident.id) === Number(highlightedId)}
+                  />
+                </div>
               ))}
             </div>
           </main>

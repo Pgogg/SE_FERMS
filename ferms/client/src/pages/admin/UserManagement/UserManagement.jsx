@@ -197,6 +197,11 @@ export default function UserManagement() {
     const errors = validateUserForm();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
+      setTimeout(() => {
+        const firstField = Object.keys(errors)[0];
+        document.getElementById(`field-${firstField}`)?.focus() ||
+        document.querySelector(`[name="${firstField}"]`)?.focus();
+      }, 50);
       return;
     }
 

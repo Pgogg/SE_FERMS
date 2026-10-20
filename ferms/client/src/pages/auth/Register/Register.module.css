@@ -162,3 +162,18 @@
   width: 100%;
   margin-top: var(--space-2);
 }
+
+/* Mobile responsive padding at 360px viewport */
+@media (max-width: 640px) {
+  .formSection {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .card {
+    padding: var(--space-4) !important;
+  }
+
+  .heading {
+    font-size: 32px;
+  }
+}

@@ -18,6 +18,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
   // If already logged in, redirect immediately to ROLE_HOME
@@ -30,11 +31,27 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    if (!email.trim() || !password) {
-      setError('Email and password are required.');
+    const errs = {};
+    if (!email.trim()) {
+      errs.email = 'Email address is required.';
+    }
+    if (!password) {
+      errs.password = 'Password is required.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setTimeout(() => {
+        if (errs.email) {
+          document.getElementById('login-email')?.focus();
+        } else if (errs.password) {
+          document.getElementById('login-password')?.focus();
+        }
+      }, 50);
       return;
     }
 
+    setFieldErrors({});
     setBusy(true);
     try {
       const loggedInUser = await login(email.trim(), password);
@@ -102,7 +119,12 @@ export default function Login() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                error={fieldErrors.email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                  setError('');
+                }}
                 disabled={busy}
               />
 
@@ -114,7 +136,12 @@ export default function Login() {
                 autoComplete="current-password"
                 required
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                error={fieldErrors.password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  setError('');
+                }}
                 disabled={busy}
               />
 
