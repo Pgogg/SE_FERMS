@@ -64,6 +64,11 @@ export default function Register() {
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
+      setTimeout(() => {
+        const firstKey = Object.keys(errors)[0];
+        const el = document.getElementById(`register-${firstKey}`);
+        el?.focus();
+      }, 50);
       return;
     }
 

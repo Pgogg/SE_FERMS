@@ -120,14 +120,20 @@ export default function NotificationBell() {
   };
 
   const handleItemClick = async (notif) => {
-    if (!notif.readStatus) {
+    const isUnread = notif.readStatus === false || notif.read_status === false || (!notif.readStatus && notif.readStatus !== true);
+    if (isUnread) {
       await markRead(notif.id);
     }
     setIsOpen(false);
 
     if (notif.incidentId) {
       const destination = getRoleIncidentPath(user?.role, notif.incidentId);
-      navigate(destination);
+      navigate(destination, {
+        state: {
+          highlightId: notif.incidentId,
+          selectedIncidentId: notif.incidentId,
+        },
+      });
     }
   };
 

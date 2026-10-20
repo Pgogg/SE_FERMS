@@ -135,6 +135,18 @@ export default function IncidentForm({ onSubmitted }) {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setTimeout(() => {
+        if (newErrors.address) {
+          document.getElementById('field-address-manual')?.focus();
+        } else if (newErrors.location) {
+          if (showManualLocation) {
+            document.getElementById('field-address-manual')?.focus() ||
+            document.getElementById('btn-use-location')?.focus();
+          } else {
+            document.getElementById('btn-use-location')?.focus();
+          }
+        }
+      }, 50);
       return;
     }
 
@@ -160,6 +172,16 @@ export default function IncidentForm({ onSubmitted }) {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setTimeout(() => {
+        if (newErrors.description) {
+          document.getElementById('field-description')?.focus();
+        } else if (newErrors.severity) {
+          const firstRadio =
+            document.querySelector('[role="radiogroup"] [role="radio"]') ||
+            document.querySelector('[role="radiogroup"] button');
+          firstRadio?.focus();
+        }
+      }, 50);
       return;
     }
 
@@ -202,6 +224,9 @@ export default function IncidentForm({ onSubmitted }) {
 
       setSubmissionResult(result);
       setCurrentStep('success');
+      setTimeout(() => {
+        document.getElementById('success-heading')?.focus();
+      }, 50);
 
       if (onSubmitted) {
         onSubmitted(result);
@@ -255,7 +280,9 @@ export default function IncidentForm({ onSubmitted }) {
           <CheckCircle size={48} className={styles.successIcon} aria-hidden="true" />
         </div>
 
-        <h2 className={styles.successHeading}>Report Submitted Successfully</h2>
+        <h2 id="success-heading" tabIndex={-1} className={styles.successHeading} style={{ outline: 'none' }}>
+          Report Submitted Successfully
+        </h2>
         <p className={styles.successSubheading}>
           Emergency response has been initiated. Nearby stations have been notified.
         </p>
@@ -359,6 +386,8 @@ export default function IncidentForm({ onSubmitted }) {
               onClick={handleUseMyLocation}
               className={styles.geoBtn}
               id="btn-use-location"
+              aria-describedby={errors.location && !showManualLocation ? 'geo-location-error' : undefined}
+              aria-invalid={errors.location && !showManualLocation ? 'true' : undefined}
             >
               <Navigation size={18} aria-hidden="true" />
               <span>{hasCoords ? 'Update my GPS location' : 'Use my location'}</span>
@@ -458,7 +487,7 @@ export default function IncidentForm({ onSubmitted }) {
 
           {/* Error if user didn't pick coordinates */}
           {errors.location && !showManualLocation && (
-            <p className={styles.fieldError} role="alert">
+            <p id="geo-location-error" className={styles.fieldError} role="alert">
               {errors.location}
             </p>
           )}
@@ -470,7 +499,6 @@ export default function IncidentForm({ onSubmitted }) {
               type="button"
               variant="primary"
               size="lg"
-              disabled={!hasCoords}
               onClick={handleNextFromLocation}
               className={styles.navBtn}
               id="btn-next-location"
