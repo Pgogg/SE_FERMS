@@ -1,1 +1,65 @@
-.root {}
+/* Marquee.module.css — Looping orange ticker band (§14.1 FIRECORE-inspired, §14.10 a11y) */
+
+/* ── Outer band: full-width orange strip ── */
+.band {
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-brand);
+  /* Single line; no descenders cut off */
+  padding: var(--space-3) 0;
+  /* Pointer events so hover pause works */
+  cursor: default;
+  user-select: none;
+}
+
+/* ── Inner flex row: two identical tracks side-by-side for seamless loop ── */
+.inner {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll var(--marquee-speed, 24s) linear infinite;
+}
+
+/* Pause on hover OR when any child receives keyboard focus (within the band) */
+.band:hover .inner,
+.band:focus-within .inner {
+  animation-play-state: paused;
+}
+
+/* ── Individual track span ── */
+.track {
+  display: inline-block;
+  white-space: nowrap;
+  /* Generous side padding so items don't abut the viewport edge */
+  padding: 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.5vw, 1.25rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink);        /* Dark ink on orange: ≥6.5:1 contrast (§14.2) */
+}
+
+/* ── Keyframe: translate left by exactly 50% so the two copies loop seamlessly ── */
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Reduced-motion: disable scroll, let both tracks wrap naturally ── */
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    animation: none;
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  /* Hide the duplicate track – not needed when static */
+  .track:last-child {
+    display: none;
+  }
+
+  .track {
+    padding: 0 var(--space-3);
+  }
+}

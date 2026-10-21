@@ -1,5 +1,6 @@
 // pages/dev/Styleguide/Styleguide.jsx — Visual style guide displaying design tokens, typography, and UI kit components
 import React, { useState } from 'react';
+import { Flame, Shield, Radio, Wrench, User } from 'lucide-react';
 import Button from '../../../components/ui/Button/Button';
 import Card from '../../../components/ui/Card/Card';
 import Badge from '../../../components/ui/Badge/Badge';
@@ -16,6 +17,8 @@ import Modal from '../../../components/ui/Modal/Modal';
 import { ToastProvider, useToast } from '../../../components/ui/Toast/Toast';
 import EmptyState from '../../../components/ui/EmptyState/EmptyState';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
+import Marquee from '../../../components/ui/Marquee/Marquee';
+import FlameCard from '../../../components/ui/FlameCard/FlameCard';
 import styles from './Styleguide.module.css';
 
 const COLOR_GROUPS = [
@@ -619,6 +622,107 @@ function StyleguideContent() {
               }
             />
           </Card>
+        </div>
+      </section>
+
+      {/* 17. Marquee */}
+      <section className={styles.section}>
+        <h2 className="display-section">17. Marquee</h2>
+        <p className="body" style={{ marginBottom: 'var(--space-4)' }}>
+          Looping orange ticker band — CSS animation only. Hover to pause. Reduced-motion: static wrapped text.
+        </p>
+
+        {/* Default speed */}
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <p className="body" style={{ marginBottom: 'var(--space-2)', color: 'var(--color-muted)' }}>Default speed (24 s)</p>
+          <Marquee
+            items={[
+              'Real-time dispatch',
+              'Nearest-station assignment',
+              'Live incident tracking',
+              'Built for five roles',
+              'Resolve and close with history',
+            ]}
+          />
+        </div>
+
+        {/* Fast speed */}
+        <div>
+          <p className="body" style={{ marginBottom: 'var(--space-2)', color: 'var(--color-muted)' }}>Fast speed (10 s)</p>
+          <Marquee
+            speed={10}
+            items={[
+              'Fire Emergency Response',
+              'Dispatch in seconds',
+              'Live map tracking',
+              'Nearest station auto-assigned',
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* 18. FlameCard */}
+      <section className={styles.section}>
+        <h2 className="display-section">18. FlameCard</h2>
+        <p className="body" style={{ marginBottom: 'var(--space-5)' }}>
+          Flame/teardrop shaped card (original CSS clip-path). Hover for lift + orange glow.
+          Used on the landing "Built for five roles" band. Wraps into a flex grid on phones.
+        </p>
+
+        {/* Warm-band background matches the landing section */}
+        <div
+          style={{
+            background: 'var(--color-bg-warm)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-7) var(--space-5)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: 'var(--space-5)',
+          }}
+          role="list"
+          aria-label="Five user roles"
+        >
+          <div role="listitem">
+            <FlameCard
+              icon={<User size={28} strokeWidth={1.5} />}
+              title="Citizen"
+            >
+              Report fires instantly
+            </FlameCard>
+          </div>
+          <div role="listitem">
+            <FlameCard
+              icon={<Radio size={28} strokeWidth={1.5} />}
+              title="Dispatch"
+            >
+              Auto nearest-station
+            </FlameCard>
+          </div>
+          <div role="listitem">
+            <FlameCard
+              icon={<Flame size={28} strokeWidth={1.5} />}
+              title="Firefighter"
+            >
+              Respond in the field
+            </FlameCard>
+          </div>
+          <div role="listitem">
+            <FlameCard
+              icon={<Shield size={28} strokeWidth={1.5} />}
+              title="Station Officer"
+            >
+              Manage resources
+            </FlameCard>
+          </div>
+          <div role="listitem">
+            <FlameCard
+              icon={<Wrench size={28} strokeWidth={1.5} />}
+              title="Administrator"
+            >
+              Full system control
+            </FlameCard>
+          </div>
         </div>
       </section>
     </main>

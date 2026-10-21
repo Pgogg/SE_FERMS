@@ -23,13 +23,22 @@ export default function Modal({ open, onClose, title, children, footer }) {
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     if (e.key === 'Tab') {
+      const isInside = dialogRef.current.contains(document.activeElement);
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (!isInside || document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
       } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        if (!isInside || document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     }
-    if (e.key === 'Escape') { onClose?.(); }
+    if (e.key === 'Escape') {
+      onClose?.();
+    }
   }, [onClose]);
 
   useEffect(() => {
@@ -38,14 +47,22 @@ export default function Modal({ open, onClose, title, children, footer }) {
       // Focus first focusable inside dialog after paint
       requestAnimationFrame(() => {
         const focusable = dialogRef.current?.querySelectorAll(FOCUSABLE);
-        focusable?.[0]?.focus();
+        if (focusable && focusable.length > 0) {
+          focusable[0].focus();
+        } else {
+          dialogRef.current?.focus();
+        }
       });
       document.addEventListener('keydown', trapFocus);
       document.body.style.overflow = 'hidden';
     } else {
       document.removeEventListener('keydown', trapFocus);
       document.body.style.overflow = '';
-      previousFocus.current?.focus();
+      try {
+        previousFocus.current?.focus();
+      } catch {
+        // safe fallback
+      }
     }
     return () => {
       document.removeEventListener('keydown', trapFocus);
