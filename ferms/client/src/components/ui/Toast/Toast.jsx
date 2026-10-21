@@ -34,7 +34,7 @@ function ToastItem({ id, type, message, onDismiss }) {
   };
 
   return (
-    <div className={`${styles.toast} ${styles[type]}`} role="status">
+    <div className={`${styles.toast} ${styles[type]}`}>
       <span className={styles.icon}>{icons[type] || icons.info}</span>
       <span className={styles.message}>{message}</span>
       <button

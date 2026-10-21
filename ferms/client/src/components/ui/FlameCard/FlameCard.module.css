@@ -1,1 +1,142 @@
-.root {}
+/* FlameCard.module.css — Original flame-teardrop shaped card (§14.1, §14.8 built-for-five-roles section) */
+
+/*
+ * Clip-path: an original teardrop / flame silhouette drawn as a polygon.
+ * Points trace (in % of width × height): wide base, curving sides, narrowing
+ * at the mid section, and meeting near the centre top — evoking a flame shape.
+ * This path was hand-authored; it is NOT copied from any brand or logo.
+ *
+ *   top-centre apex
+ *        |
+ *     ___•___
+ *    /       \    ← upper bulge
+ *   |         |
+ *    \       /    ← waist (narrow)
+ *     |     |
+ *      \   /     ← lower flare
+ *       \_/      ← flat base
+ */
+.card {
+  /* Flame / teardrop silhouette — original polygon */
+  clip-path: polygon(
+    /* Base left */ 8%  100%,
+    /* Base right */ 92% 100%,
+    /* Lower-right flare */ 88% 82%,
+    /* Right side — outer bulge */ 95% 62%,
+    /* Right shoulder */ 80% 38%,
+    /* Upper-right curve inward */ 68% 22%,
+    /* Apex */ 50% 4%,
+    /* Upper-left curve inward */ 32% 22%,
+    /* Left shoulder */ 20% 38%,
+    /* Left side — outer bulge */ 5%  62%,
+    /* Lower-left flare */ 12% 82%
+  );
+
+  /* Card surface */
+  background: var(--color-bg);
+  box-shadow: 0 8px 28px rgba(17, 17, 17, 0.10);
+
+  /* Fixed proportions: tall enough for the flame shape to read */
+  width: 180px;
+  min-height: 240px;
+
+  /* Content: centred column */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4) var(--space-6);
+  box-sizing: border-box;
+
+  /* Keyboard focus visible even through the clip */
+  outline-offset: 4px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(255, 106, 0, 0.18);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--color-brand);
+}
+
+/* ── Orange icon circle ── */
+.iconBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand);
+  color: var(--color-ink);        /* dark icon on orange: §14.2 */
+  flex-shrink: 0;
+}
+
+/* ── Text area ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.desc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+  max-width: 140px;
+}
+
+/* ──────────────────────────────────────── */
+/* Responsive grid wrapper                  */
+/* (used when FlameCards are siblings in a  */
+/*  .flameGrid container on the landing)    */
+/* ──────────────────────────────────────── */
+:global(.flameGrid) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-5) 0;
+}
+
+/* Narrow phones: stack in 2-col grid */
+@media (max-width: 640px) {
+  .card {
+    width: 148px;
+    min-height: 196px;
+  }
+
+  .iconBadge {
+    width: 44px;
+    height: 44px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+}
+
+/* Preserve hover intent on touch: remove translateY */
+@media (hover: none) {
+  .card:hover {
+    transform: none;
+  }
+}

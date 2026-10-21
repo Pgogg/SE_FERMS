@@ -69,7 +69,7 @@
 .actionBtn {
   font-size: 0.8125rem;
   padding: var(--space-1) var(--space-3);
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .dangerBtn {

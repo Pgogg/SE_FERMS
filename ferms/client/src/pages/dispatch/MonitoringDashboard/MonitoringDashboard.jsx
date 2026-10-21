@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import AppLayout from '../../../components/common/AppLayout/AppLayout';
 import SectionHeading from '../../../components/ui/SectionHeading/SectionHeading';
 import Card from '../../../components/ui/Card/Card';
@@ -85,24 +85,21 @@ export default function MonitoringDashboard() {
   // Available fire stations for filter dropdown
   const [stations, setStations] = useState([]);
 
-  // Load stations on mount (for dispatch operator and admin)
-  useEffect(() => {
-    let isMounted = true;
+  // Load stations helper (for dispatch operator and admin)
+  const fetchStations = useCallback(async () => {
     if (!isStationOfficer) {
-      listStations()
-        .then((envelope) => {
-          if (isMounted) {
-            setStations(envelope?.data || []);
-          }
-        })
-        .catch(() => {
-          // Graceful fallback if stations endpoint is temporarily unreachable
-        });
+      try {
+        const envelope = await listStations();
+        setStations(envelope?.data || []);
+      } catch {
+        // Graceful fallback if stations endpoint is temporarily unreachable
+      }
     }
-    return () => {
-      isMounted = false;
-    };
   }, [isStationOfficer]);
+
+  useEffect(() => {
+    fetchStations();
+  }, [fetchStations]);
 
   // Compose query params for useIncidents
   const queryParams = useMemo(() => {
@@ -114,7 +111,85 @@ export default function MonitoringDashboard() {
   }, [statusFilter, stationFilter, showClosed, isStationOfficer]);
 
   // Hook handles list + stats in parallel with params change dependency
-  const { incidents, stats, loading, error, refetch } = useIncidents(queryParams);
+  const { incidents: hookIncidents, stats: hookStats, loading, error, refetch } = useIncidents(queryParams);
+  const [localIncidents, setLocalIncidents] = useState([]);
+  const [localStats, setLocalStats] = useState(null);
+
+  useEffect(() => {
+    setLocalIncidents(hookIncidents || []);
+  }, [hookIncidents]);
+
+  useEffect(() => {
+    setLocalStats(hookStats);
+  }, [hookStats]);
+
+  const incidents = localIncidents;
+  const stats = localStats || hookStats;
+
+  // Requirement 2: In onAssigned, update the list, the stats and the map from the returned incident and show a Toast.
+  const handleIncidentAssigned = useCallback(
+    async (updatedIncident) => {
+      if (!updatedIncident?.id) return;
+
+      // 1. Update the list immediately in place with the returned incident
+      setLocalIncidents((prev) => {
+        const index = prev.findIndex((i) => Number(i.id) === Number(updatedIncident.id));
+        if (index !== -1) {
+          const next = [...prev];
+          next[index] = { ...next[index], ...updatedIncident };
+          return next;
+        }
+        return [updatedIncident, ...prev];
+      });
+
+      // 2. Update stats immediately if unassigned incident became assigned
+      setLocalStats((prev) => {
+        if (!prev) return prev;
+        const oldIncident = (localIncidents || []).find(
+          (i) => Number(i.id) === Number(updatedIncident.id)
+        );
+        if (
+          oldIncident &&
+          oldIncident.status === 'unassigned' &&
+          updatedIncident.status === 'assigned'
+        ) {
+          return {
+            ...prev,
+            unassigned: Math.max(0, (prev.unassigned || 0) - 1),
+            assigned: (prev.assigned || 0) + 1,
+          };
+        }
+        return prev;
+      });
+
+      // 3. Trigger refetch of incidents & stats to synchronize with backend/MSW
+      if (refetch) {
+        try {
+          await refetch();
+        } catch {
+          // ignore background refetch failure
+        }
+      }
+
+      // 4. Update the map:
+      // Map incidents are derived from `incidents`, so `localIncidents` update immediately updates the map marker.
+      // Station markers on the map show available vehicle counts, so reload stations:
+      await fetchStations();
+
+      // 5. Close selected incident modal
+      setSelectedIncident(null);
+
+      // 6. Show Toast
+      const targetStationName =
+        updatedIncident.station?.name ||
+        (updatedIncident.stationId ? `Station #${updatedIncident.stationId}` : 'fire station');
+      toast.show({
+        type: 'success',
+        message: `Incident #${updatedIncident.id} reassigned to ${targetStationName}.`,
+      });
+    },
+    [localIncidents, refetch, fetchStations, toast]
+  );
 
   // Incidents shown on map: closed incidents and those without coordinates are excluded
   const mapIncidents = useMemo(
@@ -386,6 +461,7 @@ export default function MonitoringDashboard() {
           incident={selectedIncident}
           open={Boolean(selectedIncident)}
           onClose={() => setSelectedIncident(null)}
+          onAssigned={handleIncidentAssigned}
         />
       </div>
     </AppLayout>

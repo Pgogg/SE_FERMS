@@ -17,6 +17,11 @@
   user-select: none;
 }
 
+.button:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
 /* Sizes (min-height 44px on all) */
 .md {
   min-height: 44px;
