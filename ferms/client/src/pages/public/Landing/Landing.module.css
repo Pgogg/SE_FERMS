@@ -1,91 +1,682 @@
-/* Landing.module.css — Clean presentation layout for root landing placeholder */
-.root {
-  min-height: 100vh;
+/* Landing.module.css — Full public landing page styles (W7-P-FE-1, §14.8) */
+/* Phone-first, no hex literals — all colours via var(--token). */
+/* Breakpoints: 640px (phone→tablet), 1024px (tablet→desktop) */
+
+/* ── Page shell ── */
+.page {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: var(--space-6) var(--space-4);
-  background-color: var(--color-bg);
+  min-height: 100vh;
+  background: var(--color-bg);
+  overflow-x: hidden;
 }
 
+/* ── Shared section wrapper ── */
+.section {
+  padding: var(--space-9) 0;
+}
+.sectionWarm {
+  background: var(--color-bg-warm);
+}
+
+/* ── Centred content container (max 1200px) ── */
 .container {
-  max-width: 760px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+/* ═══════════════════════════════════════════════
+   §1 HERO
+   ═══════════════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  background: var(--color-dark);
+  /* Fallback gradient if no image: §14.9 "falls back to var(--color-dark)" */
+  background-image: linear-gradient(
+    135deg,
+    var(--color-dark) 0%,
+    var(--color-dark-2) 60%,
+    color-mix(in srgb, var(--color-dark) 85%, var(--color-brand)) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Subtle radial glow behind the heading */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-brand) 12%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Content sits below the navbar */
+.heroInner {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-6);
+  padding: calc(var(--space-9) + 80px) var(--space-4) var(--space-9);
+  max-width: 1200px;
+  margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  flex-direction: column;
+}
+
+.heroContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heroEyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+  /* AA contrast: var(--color-brand) on var(--color-dark) is ~5.5:1 — passes for small text */
+}
+
+/* h1: 52px on phone → 96px on desktop (§14.4) */
+.heroTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.25rem, 8vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-bg);
+}
+
+.heroTitleAccent {
+  color: var(--color-brand);
+  /* Large display text ≥24px — white/brand on dark is fine per §14.2 */
+}
+
+.heroBody {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-bg-warm);
+  max-width: 520px;
+}
+
+.heroCtas {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+/* Ghost button on dark background: override border colour */
+.heroLoginBtn {
+  border-color: var(--color-bg-warm) !important;
+  color: var(--color-bg) !important;
+}
+.heroLoginBtn:hover,
+.heroLoginBtn:focus-visible {
+  background: var(--border-subtle-white) !important;
+}
+
+.safetyLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--color-bg-warm);
+  opacity: 0.75;
+}
+
+.safetyLink {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+.safetyLink:hover,
+.safetyLink:focus-visible {
+  text-decoration: underline;
+}
+.safetyLink:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* EmergencyCallCard docked lower-right of hero */
+.heroEmergencyCard {
+  flex-shrink: 0;
+  align-self: flex-end;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .heroInner {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .heroEmergencyCard {
+    width: auto;
+    max-width: 320px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroInner {
+    align-items: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §3 ABOUT
+   ═══════════════════════════════════════════════ */
+.aboutGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.aboutText {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
 
-.heroCard {
-  padding: var(--space-6);
-  border-radius: var(--radius-card);
+/* Orange accent card */
+.aboutHighlights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
 }
 
-.badgeRow {
+.highlightRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.highlightRow svg {
+  flex-shrink: 0;
+  color: var(--color-ink);
+  margin-top: 2px;
+}
+
+.highlightRow strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  margin-bottom: var(--space-1);
+}
+
+.highlightRow p {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+/* SVG illustration */
+.aboutIllustration {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.aboutSvg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+@media (min-width: 768px) {
+  .aboutGrid {
+    flex-direction: row;
+    align-items: center;
+  }
+  .aboutText {
+    flex: 1;
+  }
+  .aboutIllustration {
+    flex: 0 0 300px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §4 KEY FEATURES
+   ═══════════════════════════════════════════════ */
+.featuresLayout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+/* Numbered tab list */
+.featureTabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.featureTab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease;
+  width: 100%;
+  min-height: 44px;
+}
+
+.featureTab:hover {
+  background: var(--color-border);
+}
+
+.featureTab:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.featureTabActive {
+  background: var(--color-brand-tint);
+}
+
+.featureNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  background: var(--color-border);
+  color: var(--color-muted);
+  flex-shrink: 0;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.featureNumActive {
+  background: var(--color-brand);
+  color: var(--color-ink);
+}
+
+.featureTabTitle {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.featureTabActive .featureTabTitle {
+  color: var(--color-brand-text);
+  font-weight: 600;
+}
+
+/* Feature detail panel */
+.featurePanel {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  flex: 1;
+}
+
+.featurePanelVisible {
+  display: flex;
+}
+
+.featurePanelIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--color-brand);
+  color: var(--color-ink);
+}
+
+.featurePanelTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.featurePanelBody {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--color-text);
+  max-width: 480px;
+}
+
+@media (min-width: 768px) {
+  .featuresLayout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .featureTabs {
+    width: 280px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §5 ROLES + STATS
+   ═══════════════════════════════════════════════ */
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+}
+
+/* Dark stats band directly inside the section (no extra wrapper) */
+.statsBand {
+  margin-top: var(--space-7);
+  background: var(--color-dark);
+  padding: var(--space-7) 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §6 HOW IT WORKS
+   ═══════════════════════════════════════════════ */
+.stepsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+}
+
+@media (min-width: 640px) {
+  .stepsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §7 CALL TO ACTION
+   ═══════════════════════════════════════════════ */
+.ctaCard {
+  padding: var(--space-7) var(--space-6);
+  border-radius: var(--radius-lg);
+}
+
+.ctaInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.ctaEyebrow {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+  margin-bottom: var(--space-2);
+}
+
+.ctaTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-bg);
+  line-height: 1.0;
+}
+
+.ctaBody {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-bg-warm);
+  max-width: 480px;
+}
+
+.ctaActions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ctaLoginBtn {
+  border-color: var(--color-bg-warm) !important;
+  color: var(--color-bg) !important;
+}
+.ctaLoginBtn:hover,
+.ctaLoginBtn:focus-visible {
+  background: var(--border-subtle-white) !important;
+}
+
+@media (min-width: 768px) {
+  .ctaInner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ctaText {
+    flex: 1;
+  }
+  .ctaActions {
+    flex-shrink: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   §8 FOOTER
+   ═══════════════════════════════════════════════ */
+.footer {
+  background: var(--color-dark);
+  padding: var(--space-8) 0 var(--space-5);
+  overflow: hidden;
+}
+
+.footerTop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .footerTop {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+}
+
+/* Logo */
+.footerLogo {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  text-decoration: none;
+}
+
+.footerLogoName {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  color: var(--color-bg);
+}
+
+/* Footer nav links */
+.footerLinks {
+  display: flex;
   flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.title {
-  margin: 0 0 var(--space-2);
+.footerLink {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--color-bg-warm);
+  text-decoration: none;
+  transition: color 150ms ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
-.subtitle {
+.footerLink:hover,
+.footerLink:focus-visible {
   color: var(--color-brand);
-  margin-bottom: var(--space-4);
 }
 
-.description {
+.footerLink:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Emergency numbers */
+.footerEmergency {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
   color: var(--color-muted);
-  line-height: var(--line-normal);
-  margin-bottom: var(--space-5);
 }
 
-.actionRow {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.emergencyBanner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
-  background-color: var(--color-ink);
-  color: var(--color-bg);
-  border-radius: var(--radius-card);
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.emergencyInfo {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.emergencyTitle {
-  font-family: var(--font-display);
-  font-size: var(--text-h3);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--color-bg);
-}
-
-.emergencyText {
-  font-size: var(--text-sm);
-  color: var(--st-reported);
-}
-
-.emergencyPhone {
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
+.footerEmergencyLink {
   color: var(--color-brand);
-  letter-spacing: var(--tracking-caps);
+  font-weight: 600;
+  text-decoration: none;
+}
+.footerEmergencyLink:hover,
+.footerEmergencyLink:focus-visible {
+  text-decoration: underline;
+}
+.footerEmergencyLink:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Project credit line */
+.footerCredit {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+/* Giant outlined wordmark (§14.1, §14.8) — purely decorative */
+.wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 18vw, 14rem);
+  letter-spacing: 0.04em;
+  line-height: 0.85;
+  text-transform: uppercase;
+  /* Outlined style: transparent fill, brand stroke */
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-dark-2);
+  text-stroke: 1.5px var(--color-dark-2);
+  user-select: none;
+  pointer-events: none;
+  /* Overflow visible to give the full-bleed wordmark effect */
+  margin-left: -0.02em;
+}
+
+/* ═══════════════════════════════════════════════
+   REDUCED MOTION — disable all animations/transitions
+   (Marquee handled inside Marquee.module.css)
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   NARROW PHONE (360px) adjustments
+   ═══════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .heroInner {
+    padding-top: calc(var(--space-7) + 72px);
+    padding-bottom: var(--space-7);
+  }
+  .ctaCard {
+    padding: var(--space-5) var(--space-4);
+  }
+  .featurePanel {
+    padding: var(--space-4);
+  }
+  .wordmark {
+    font-size: 4.5rem;
+  }
 }

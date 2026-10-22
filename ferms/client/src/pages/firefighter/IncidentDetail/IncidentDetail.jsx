@@ -399,7 +399,7 @@ export default function IncidentDetail() {
         <Card variant="light" className={styles.sectionCard}>
           <h2 className={styles.sectionTitle}>Assigned Vehicles</h2>
           {vehicles.length === 0 ? (
-            <p className={styles.errorMsg} style={{ color: 'var(--color-muted)' }}>No vehicles assigned to this incident.</p>
+            <p className={styles.emptyMsg}>No vehicles assigned to this incident.</p>
           ) : (
             <div className={styles.vehicleList}>
               {vehicles.map((v, i) => (
@@ -424,7 +424,7 @@ export default function IncidentDetail() {
         <Card variant="light" className={styles.sectionCard}>
           <h2 className={styles.sectionTitle}>Status History</h2>
           {statusHistory.length === 0 ? (
-            <p style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>No history recorded yet.</p>
+            <p className={styles.emptyMsg}>No history recorded yet.</p>
           ) : (
             <div className={styles.timeline} aria-label="Status history timeline">
               {statusHistory.map((entry, idx) => (
@@ -457,7 +457,7 @@ export default function IncidentDetail() {
           <h2 className={styles.sectionTitle}>Field Notes</h2>
 
           {notes.length === 0 ? (
-            <p style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>No notes yet. Add the first note below.</p>
+            <p className={styles.emptyMsg}>No notes yet. Add the first note below.</p>
           ) : (
             <div className={styles.notesList}>
               {/* oldest first — notes from API are already ordered ascending */}

@@ -27,11 +27,11 @@
   border-left: 4px solid var(--color-muted);
 }
 
-.success { border-left-color: #16A34A; }
-.success .icon { color: #16A34A; }
+.success { border-left-color: var(--st-resolved); }
+.success .icon { color: var(--st-resolved); }
 
-.error { border-left-color: #D92D20; }
-.error .icon { color: #D92D20; }
+.error { border-left-color: var(--st-unassigned); }
+.error .icon { color: var(--st-unassigned); }
 
 .info { border-left-color: var(--color-brand); }
 .info .icon { color: var(--color-brand); }

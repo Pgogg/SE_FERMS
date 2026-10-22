@@ -18,11 +18,11 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
+  background: color-mix(in srgb, var(--sev-critical) 8%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--sev-critical) 35%, transparent);
   border-left: 5px solid var(--sev-critical);
   border-radius: var(--radius-sm);
-  color: #991B1B;
+  color: var(--sev-critical);
 }
 
 .bannerIcon {
@@ -37,7 +37,7 @@
 }
 
 .bannerText strong {
-  color: #7F1D1D;
+  color: var(--color-ink);
 }
 
 /* Header */
@@ -81,7 +81,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
-  box-shadow: 0 4px 20px rgba(17, 17, 17, 0.04);
+  box-shadow: var(--shadow-float);
 }
 
 .sidebarColumn {

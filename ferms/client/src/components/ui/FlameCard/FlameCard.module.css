@@ -34,7 +34,7 @@
 
   /* Card surface */
   background: var(--color-bg);
-  box-shadow: 0 8px 28px rgba(17, 17, 17, 0.10);
+  box-shadow: var(--shadow-float);
 
   /* Fixed proportions: tall enough for the flame shape to read */
   width: 180px;
@@ -56,7 +56,7 @@
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(255, 106, 0, 0.18);
+  box-shadow: var(--shadow-brand-hover);
 }
 
 .card:focus-visible {

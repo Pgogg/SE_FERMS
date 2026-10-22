@@ -18,6 +18,7 @@ import SeverityPicker from '../../ui/SeverityPicker/SeverityPicker';
 import Button from '../../ui/Button/Button';
 import Badge from '../../ui/Badge/Badge';
 import LocationPicker from './LocationPicker';
+import { useToast } from '../../ui/Toast/Toast';
 import { createIncident } from '../../../api/incidents.api';
 import styles from './IncidentForm.module.css';
 
@@ -28,6 +29,7 @@ const STEPS = [
 ];
 
 export default function IncidentForm({ onSubmitted }) {
+  const toast = useToast();
   // Step navigation
   const [currentStep, setCurrentStep] = useState('location');
 
@@ -222,6 +224,11 @@ export default function IncidentForm({ onSubmitted }) {
         stationName: stationName || 'Assigned shortly',
       };
 
+      toast?.show({
+        type: 'success',
+        message: 'Emergency report submitted. Dispatch initiated.',
+      });
+
       setSubmissionResult(result);
       setCurrentStep('success');
       setTimeout(() => {
@@ -232,9 +239,15 @@ export default function IncidentForm({ onSubmitted }) {
         onSubmitted(result);
       }
     } catch (err) {
-      setSubmitError(
-        err.message || 'Failed to submit incident report. Please try again.'
-      );
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setSubmitError(
+          'Network connection failed. Your report details have been kept. Please check your connection and retry.'
+        );
+      } else {
+        setSubmitError(
+          err.message || 'Failed to submit incident report. Your report details have been kept. Please try again.'
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -666,6 +679,31 @@ export default function IncidentForm({ onSubmitted }) {
               Call 101 or 112 if anyone is in danger. FERMS does not replace emergency calls.
             </span>
           </div>
+
+          {/* Submission Error Banner with Retry */}
+          {submitError && (
+            <div className={styles.submitErrorBanner} role="alert" aria-live="assertive">
+              <div className={styles.submitErrorContent}>
+                <AlertCircle size={20} className={styles.errorBannerIcon} aria-hidden="true" />
+                <div className={styles.errorBannerText}>
+                  <p className={styles.errorBannerMsg}>{submitError}</p>
+                  <span className={styles.keepDataNote}>
+                    Your input has been kept. Check your connection and click retry.
+                  </span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="dark"
+                size="md"
+                onClick={handleSubmitReport}
+                disabled={isSubmitting}
+                className={styles.retryBtn}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
 
           {/* Navigation Controls */}
           <div className={styles.navRow}>

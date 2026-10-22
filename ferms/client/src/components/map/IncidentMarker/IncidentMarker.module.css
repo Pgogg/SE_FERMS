@@ -30,7 +30,7 @@
 
 /* Selected marker styles: larger and highlighted */
 .isFlameSelected .flamePin {
-  filter: drop-shadow(0 0 8px var(--marker-selected-ring)) drop-shadow(0 4px 14px rgba(17, 17, 17, 0.4));
+  filter: drop-shadow(0 0 8px var(--marker-selected-ring)) drop-shadow(var(--marker-selected-shadow));
   transform: scale(1.18);
 }
 

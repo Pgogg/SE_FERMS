@@ -41,7 +41,7 @@
 .card:hover,
 .card:focus-visible {
   border-color: var(--color-brand);
-  box-shadow: 0 8px 32px rgba(255, 106, 0, 0.12);
+  box-shadow: var(--shadow-brand-glow);
   transform: translateY(-2px);
 }
 

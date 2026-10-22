@@ -1,0 +1,3623 @@
+{
+  "info": {
+    "name": "FERMS Track 1 – Parth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for FERMS Track 1 (Parth): Auth, Users (admin), Incident create/mine, Assign override, Notifications.\nRun after `npm run db:reset`. Execute top-to-bottom."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api",
+      "type": "string"
+    },
+    {
+      "key": "citizenToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operatorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "firefighterToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "officerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdIncidentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Login as Citizen",
+          "uid": "t1-00001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login as Citizen succeeds (200)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.environment.set(\"citizenToken\", json.data.token);",
+                  "  pm.collectionVariables.set(\"citizenToken\", json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Operator",
+          "uid": "t1-00002",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operator@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login as Operator succeeds (200)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.environment.set(\"operatorToken\", json.data.token);",
+                  "  pm.collectionVariables.set(\"operatorToken\", json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Firefighter",
+          "uid": "t1-00003",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"firefighter@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login as Firefighter succeeds (200)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.environment.set(\"firefighterToken\", json.data.token);",
+                  "  pm.collectionVariables.set(\"firefighterToken\", json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Officer",
+          "uid": "t1-00004",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"officer@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login as Officer succeeds (200)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.environment.set(\"officerToken\", json.data.token);",
+                  "  pm.collectionVariables.set(\"officerToken\", json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Admin",
+          "uid": "t1-00005",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login as Admin succeeds (200)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.environment.set(\"adminToken\", json.data.token);",
+                  "  pm.collectionVariables.set(\"adminToken\", json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "uid": "t1-00006",
+          "item": [
+            {
+              "name": "Register – Happy Path (201)",
+              "uid": "t1-00007",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Postman Test User\",\n  \"email\": \"postman.track1@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"token\");",
+                      "  pm.expect(json.data).to.have.property(\"user\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register – Validation Error (400) – Password Too Short",
+              "uid": "t1-00008",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bad\",\n  \"email\": \"bad@ferms.test\",\n  \"password\": \"123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register – Conflict (409) – Duplicate Email",
+              "uid": "t1-00009",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Admin Dup\",\n  \"email\": \"admin@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 409\", function () {",
+                      "  pm.response.to.have.status(409);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"CONFLICT\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "uid": "t1-00010",
+          "item": [
+            {
+              "name": "Login – Happy Path (200)",
+              "uid": "t1-00011",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"citizen@ferms.test\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"token\");",
+                      "  pm.expect(json.data).to.have.property(\"user\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login – Validation Error (400) – Missing Password",
+              "uid": "t1-00012",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"citizen@ferms.test\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login – Wrong Credentials (401)",
+              "uid": "t1-00013",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"citizen@ferms.test\",\n  \"password\": \"wrongpassword\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Me (GET /auth/me)",
+          "uid": "t1-00014",
+          "item": [
+            {
+              "name": "Me – Happy Path (200)",
+              "uid": "t1-00015",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"id\");",
+                      "  pm.expect(json.data).to.have.property(\"email\");",
+                      "  pm.expect(json.data).to.have.property(\"role\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Me – Unauthenticated (401)",
+              "uid": "t1-00016",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Logout (POST /auth/logout)",
+          "uid": "t1-00017",
+          "item": [
+            {
+              "name": "Logout – Happy Path (200)",
+              "uid": "t1-00018",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Logout – Unauthenticated (401)",
+              "uid": "t1-00019",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users (admin)",
+      "item": [
+        {
+          "name": "List Users",
+          "uid": "t1-00020",
+          "item": [
+            {
+              "name": "List Users – Happy Path (200)",
+              "uid": "t1-00021",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.be.an(\"array\");",
+                      "  pm.expect(json).to.have.property(\"meta\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Users – Filter by role=citizen (200)",
+              "uid": "t1-00022",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users?role=citizen",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "citizen"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.be.an(\"array\");",
+                      "  json.data.forEach(function(u) { pm.expect(u.role).to.eql(\"citizen\"); });",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Users – Wrong Role (403) – Citizen",
+              "uid": "t1-00023",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Users – Wrong Role (403) – Operator",
+              "uid": "t1-00024",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{operatorToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Users – Unauthenticated (401)",
+              "uid": "t1-00025",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "uid": "t1-00026",
+          "item": [
+            {
+              "name": "Create User – Happy Path (201)",
+              "uid": "t1-00027",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Test Citizen\",\n  \"email\": \"newcitizen.pm1@ferms.test\",\n  \"password\": \"Passw0rd!\",\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"id\");",
+                      "  pm.collectionVariables.set(\"createdUserId\", String(json.data.id));",
+                      "  pm.environment.set(\"createdUserId\", String(json.data.id));",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create User – Validation Error (400) – Missing Email",
+              "uid": "t1-00028",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"No Email\",\n  \"password\": \"Passw0rd!\",\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create User – Conflict (409) – Duplicate Email",
+              "uid": "t1-00029",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Duplicate\",\n  \"email\": \"citizen@ferms.test\",\n  \"password\": \"Passw0rd!\",\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 409\", function () {",
+                      "  pm.response.to.have.status(409);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"CONFLICT\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create User – Wrong Role (403) – Operator",
+              "uid": "t1-00030",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{operatorToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Hacker\",\n  \"email\": \"hacker@ferms.test\",\n  \"password\": \"Passw0rd!\",\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create User – Unauthenticated (401)",
+              "uid": "t1-00031",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"NoAuth\",\n  \"email\": \"noauth@ferms.test\",\n  \"password\": \"Passw0rd!\",\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "uid": "t1-00032",
+          "item": [
+            {
+              "name": "Update User – Happy Path (200) – Update Name",
+              "uid": "t1-00033",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Name Via Postman\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data.name).to.eql(\"Updated Name Via Postman\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update User – Validation Error (400) – Empty Name",
+              "uid": "t1-00034",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update User – Wrong Role (403) – Firefighter",
+              "uid": "t1-00035",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{firefighterToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Hacked\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update User – Unauthenticated (401)",
+              "uid": "t1-00036",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"NoAuth\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Change User Role",
+          "uid": "t1-00037",
+          "item": [
+            {
+              "name": "Change Role – Happy Path (200) – Citizen to Operator",
+              "uid": "t1-00038",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"dispatch_operator\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data.role).to.eql(\"dispatch_operator\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Change Role – Validation Error (400) – Invalid Role",
+              "uid": "t1-00039",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"superuser\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Change Role – Note Backend Allows Self-Demotion – Flexible Check",
+              "uid": "t1-00040",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"firefighter\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Role change envelope is valid (200 or 400)\", function () {",
+                      "  pm.expect([200, 400]).to.include(pm.response.code);",
+                      "  var json = pm.response.json();",
+                      "  if (pm.response.code === 200) { pm.expect(json).to.have.property(\"data\"); }",
+                      "  else { pm.expect(json).to.have.property(\"error\"); }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Change Role – Wrong Role (403) – Officer",
+              "uid": "t1-00041",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{officerToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Change Role – Unauthenticated (401)",
+              "uid": "t1-00042",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"citizen\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Deactivate User",
+          "uid": "t1-00043",
+          "item": [
+            {
+              "name": "Deactivate User – Happy Path (200)",
+              "uid": "t1-00044",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/deactivate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "deactivate"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data.isActive !== undefined || json.data.accountStatus !== undefined).to.be.true;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Deactivate User – Self-Deactivation Blocked (400)",
+              "uid": "t1-00045",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/5/deactivate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "5",
+                    "deactivate"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Admin self-deactivate returns 400 or 403 (not allowed)\", function () {",
+                      "  pm.expect([400, 403]).to.include(pm.response.code);",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Deactivate User – Not Found (404)",
+              "uid": "t1-00046",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/99999/deactivate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "99999",
+                    "deactivate"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 404\", function () {",
+                      "  pm.response.to.have.status(404);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"NOT_FOUND\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Deactivate User – Wrong Role (403) – Citizen",
+              "uid": "t1-00047",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/deactivate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "deactivate"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Deactivate User – Unauthenticated (401)",
+              "uid": "t1-00048",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{createdUserId}}/deactivate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{createdUserId}}",
+                    "deactivate"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Assign override",
+      "item": [
+        {
+          "name": "Assign Override – Operator Happy Path (200) – Incident 2 to Station 1",
+          "uid": "t1-00060",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response envelope has data\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "// Response shape: { data: { incident: {...}, station: {...} } }",
+                  "  pm.expect(json.data).to.have.property(\"incident\");",
+                  "  pm.expect(json.data.incident).to.have.property(\"stationId\");",
+                  "  pm.expect(json.data.incident.stationId).to.eql(1);",
+                  "  pm.expect(json.data.incident.status).to.eql(\"assigned\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Admin Happy Path (200) – Incident 3 to Station 2",
+          "uid": "t1-00061",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/3/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "3",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response envelope has data\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"incident\");",
+                  "  pm.expect(json.data.incident.stationId).to.eql(2);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Conflict (409) – Station 3 Has No Available Vehicle",
+          "uid": "t1-00062",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"CONFLICT\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Validation Error (400) – Missing stationId",
+          "uid": "t1-00063",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Invalid Transition (400) – Closed Incident",
+          "uid": "t1-00064",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/6/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "6",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Closed incident returns 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Not Found (404) – Station Does Not Exist",
+          "uid": "t1-00065",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 99999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"NOT_FOUND\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Not Found (404) – Incident Does Not Exist",
+          "uid": "t1-00066",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{operatorToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/99999/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "99999",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"NOT_FOUND\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Wrong Role (403) – Citizen",
+          "uid": "t1-00067",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Wrong Role (403) – Firefighter",
+          "uid": "t1-00068",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firefighterToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Override – Unauthenticated (401)",
+          "uid": "t1-00069",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token_401_test",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/2/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents",
+                "2",
+                "assign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Response envelope has error\", function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"error\");",
+                  "  pm.expect(json.error).to.have.property(\"code\");",
+                  "  pm.expect(json.error).to.have.property(\"message\");",
+                  "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Incident create and mine",
+      "item": [
+        {
+          "name": "Create Incident (POST /incidents)",
+          "uid": "t1-00049",
+          "item": [
+            {
+              "name": "Create Incident – Happy Path (201) – Auto Dispatch",
+              "uid": "t1-00050",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"Postman test fire on the 5th floor of building A\",\n  \"severity\": \"low\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.877,\n  \"address\": \"5th Floor, Building A, Andheri East, Mumbai\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  // Response shape: { data: { incident: {...}, station: ... } }",
+                      "  pm.expect(json.data).to.have.property(\"incident\");",
+                      "  pm.expect(json.data.incident).to.have.property(\"id\");",
+                      "  pm.expect(json.data.incident).to.have.property(\"status\");",
+                      "  pm.collectionVariables.set(\"createdIncidentId\", String(json.data.incident.id));",
+                      "  pm.environment.set(\"createdIncidentId\", String(json.data.incident.id));",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Incident – Validation Error (400) – Missing Description",
+              "uid": "t1-00051",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"severity\": \"high\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.877\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Incident – Validation Error (400) – Missing Coordinates",
+              "uid": "t1-00052",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"No coordinates fire\",\n  \"severity\": \"medium\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Incident – Validation Error (400) – Invalid Severity",
+              "uid": "t1-00053",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"Bad severity\",\n  \"severity\": \"extreme\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.877\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "  pm.response.to.have.status(400);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"VALIDATION_ERROR\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Incident – Wrong Role (403) – Dispatch Operator",
+              "uid": "t1-00054",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{operatorToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"Operator should not create\",\n  \"severity\": \"low\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.877\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Incident – Unauthenticated (401)",
+              "uid": "t1-00055",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"No auth fire\",\n  \"severity\": \"low\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.877\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "My Incidents (GET /incidents/mine)",
+          "uid": "t1-00056",
+          "item": [
+            {
+              "name": "My Incidents – Happy Path (200) – Citizen",
+              "uid": "t1-00057",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents/mine",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents",
+                    "mine"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.be.an(\"array\");",
+                      "  pm.expect(json).to.have.property(\"meta\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "My Incidents – Wrong Role (403) – Firefighter",
+              "uid": "t1-00058",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{firefighterToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents/mine",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents",
+                    "mine"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "  pm.response.to.have.status(403);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"FORBIDDEN\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "My Incidents – Unauthenticated (401)",
+              "uid": "t1-00059",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/incidents/mine",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "incidents",
+                    "mine"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "uid": "t1-00070",
+          "item": [
+            {
+              "name": "List Notifications – Happy Path (200) – All",
+              "uid": "t1-00071",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.be.an(\"array\");",
+                      "  pm.expect(json).to.have.property(\"meta\");",
+                      "  if (json.data.length > 0) {",
+                      "    pm.collectionVariables.set(\"notificationId\", String(json.data[0].id));",
+                      "    pm.environment.set(\"notificationId\", String(json.data[0].id));",
+                      "  } else {",
+                      "    pm.collectionVariables.set(\"notificationId\", \"99999\");",
+                      "    pm.environment.set(\"notificationId\", \"99999\");",
+                      "  }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Notifications – Happy Path (200) – Unread Only",
+              "uid": "t1-00072",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications?unread=true",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications"
+                  ],
+                  "query": [
+                    {
+                      "key": "unread",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.be.an(\"array\");",
+                      "  // Each returned notification should have readStatus=false (API field is readStatus)",
+                      "  json.data.forEach(function(n) {",
+                      "    pm.expect(n.readStatus).to.eql(false);",
+                      "  });",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Notifications – Unauthenticated (401)",
+              "uid": "t1-00073",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification Read",
+          "uid": "t1-00074",
+          "item": [
+            {
+              "name": "Mark Read – Happy Path (200) – Own Notification",
+              "uid": "t1-00075",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "{{notificationId}}",
+                    "read"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Mark read: 200 if notification exists, 404 if none for citizen\", function () {",
+                      "  pm.expect([200, 404]).to.include(pm.response.code);",
+                      "  if (pm.response.code === 200) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property(\"data\");",
+                      "    // API uses readStatus field (not isRead)",
+                      "    pm.expect(json.data.readStatus).to.eql(true);",
+                      "  }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Mark Read – Not Found (404) – Wrong User Notification",
+              "uid": "t1-00076",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{operatorToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/1/read",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "1",
+                    "read"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 404\", function () {",
+                      "  pm.response.to.have.status(404);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"NOT_FOUND\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Mark Read – Not Found (404) – Nonexistent",
+              "uid": "t1-00077",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/99999/read",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "99999",
+                    "read"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 404\", function () {",
+                      "  pm.response.to.have.status(404);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"NOT_FOUND\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Mark Read – Unauthenticated (401)",
+              "uid": "t1-00078",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/1/read",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "1",
+                    "read"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "uid": "t1-00079",
+          "item": [
+            {
+              "name": "Mark All Read – Happy Path (200)",
+              "uid": "t1-00080",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{citizenToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/read-all",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "read-all"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response envelope has data\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Mark All Read – Unauthenticated (401)",
+              "uid": "t1-00081",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_token_401_test",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/notifications/read-all",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "read-all"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "  pm.response.to.have.status(401);",
+                      "});",
+                      "pm.test(\"Response envelope has error\", function () {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"error\");",
+                      "  pm.expect(json.error).to.have.property(\"code\");",
+                      "  pm.expect(json.error).to.have.property(\"message\");",
+                      "  pm.expect(json.error.code).to.eql(\"UNAUTHORIZED\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -27,7 +27,7 @@
   padding: var(--space-5);
   background: var(--color-dark);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle-white);
 }
 
 .statsGrid {
@@ -184,7 +184,7 @@
     box-shadow: 0 0 0 4px var(--color-brand-tint);
   }
   50% {
-    background-color: #FFF8F0;
+    background-color: var(--color-brand-tint);
   }
   100% {
     background-color: transparent;

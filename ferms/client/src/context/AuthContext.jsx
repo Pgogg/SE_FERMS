@@ -109,6 +109,27 @@ async function performLogout() {
   setGlobalAuth({ token: null, user: null, loading: false });
 }
 
+import axiosInstance from '../api/axiosInstance.js';
+
+// Setup interceptor to record expired session message on 401 responses
+axiosInstance.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const isLogin = err?.config?.url?.includes('/auth/login');
+    if ((err?.status === 401 || err?.response?.status === 401) && !isLogin) {
+      try {
+        sessionStorage.setItem(
+          'ferms_session_expired',
+          'Your session has expired. Please log in again.'
+        );
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return Promise.reject(err);
+  }
+);
+
 // On initial module load: if a real token exists, validate with GET /auth/me
 if (globalState.token && !globalState.token.startsWith('fake-jwt-token-')) {
   getMe()
@@ -121,6 +142,14 @@ if (globalState.token && !globalState.token.startsWith('fake-jwt-token-')) {
       if (err?.status === 401) {
         writeLocal(TOKEN_KEY, null);
         writeLocal(USER_KEY, null);
+        try {
+          sessionStorage.setItem(
+            'ferms_session_expired',
+            'Your session has expired. Please log in again.'
+          );
+        } catch {
+          // ignore storage errors
+        }
         setGlobalAuth({ token: null, user: null, loading: false });
       } else {
         setGlobalAuth({ loading: false });
