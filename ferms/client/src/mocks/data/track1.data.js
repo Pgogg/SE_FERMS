@@ -6,7 +6,7 @@ export const DEMO_PASSWORD = 'Passw0rd!';
 export const initialUsers = [
   {
     id: 1,
-    name: 'Demo Citizen',
+    name: 'Citizen',
     email: 'citizen@ferms.test',
     password: DEMO_PASSWORD,
     phone: '555-0101',
@@ -18,7 +18,7 @@ export const initialUsers = [
   },
   {
     id: 2,
-    name: 'Demo Dispatch Operator',
+    name: 'Dispatch Operator',
     email: 'operator@ferms.test',
     password: DEMO_PASSWORD,
     phone: '555-0102',
@@ -30,7 +30,7 @@ export const initialUsers = [
   },
   {
     id: 3,
-    name: 'Demo Firefighter',
+    name: 'Firefighter',
     email: 'firefighter@ferms.test',
     password: DEMO_PASSWORD,
     phone: '555-0103',
@@ -42,7 +42,7 @@ export const initialUsers = [
   },
   {
     id: 4,
-    name: 'Demo Station Officer',
+    name: 'Station Officer',
     email: 'officer@ferms.test',
     password: DEMO_PASSWORD,
     phone: '555-0104',
@@ -54,7 +54,7 @@ export const initialUsers = [
   },
   {
     id: 5,
-    name: 'Demo System Admin',
+    name: 'System Admin',
     email: 'admin@ferms.test',
     password: DEMO_PASSWORD,
     phone: '555-0105',

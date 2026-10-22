@@ -5,6 +5,8 @@ import Button from '../../../components/ui/Button/Button';
 import Select from '../../../components/ui/Select/Select';
 import Badge from '../../../components/ui/Badge/Badge';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
+import EmptyState from '../../../components/ui/EmptyState/EmptyState';
+import { useToast } from '../../../components/ui/Toast/Toast';
 import { listStations } from '../../../api/stations.api';
 import { assignIncident } from '../../../api/incidents.api';
 import styles from './AssignOverride.module.css';
@@ -54,6 +56,7 @@ export default function AssignOverride({
   onClose,
   onAssigned,
 }) {
+  const toast = useToast();
   const [stations, setStations] = useState([]);
   const [stationsLoading, setStationsLoading] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState('');
@@ -69,6 +72,35 @@ export default function AssignOverride({
     return ['unassigned', 'assigned'].includes(incident.status);
   }, [incident?.status]);
 
+  // Load stations callback
+  const loadStations = useCallback(async () => {
+    setStationsLoading(true);
+    setServerError(null);
+
+    try {
+      const envelope = await listStations();
+      const list = envelope?.data || [];
+      setStations(list);
+
+      // Pre-select current station if available, otherwise leave unselected
+      if (currentStationId) {
+        setSelectedStationId(String(currentStationId));
+      } else if (list.length > 0) {
+        setSelectedStationId('');
+      }
+    } catch (err) {
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setServerError('Network connection failed. Please check your connection and retry.');
+      } else {
+        setServerError(
+          err.response?.data?.error?.message || err.message || 'Failed to load fire stations. Please retry.'
+        );
+      }
+    } finally {
+      setStationsLoading(false);
+    }
+  }, [currentStationId]);
+
   // Load stations on open
   useEffect(() => {
     if (!open) {
@@ -77,38 +109,8 @@ export default function AssignOverride({
       return;
     }
 
-    let isMounted = true;
-    setStationsLoading(true);
-    setServerError(null);
-
-    listStations()
-      .then((envelope) => {
-        if (!isMounted) return;
-        const list = envelope?.data || [];
-        setStations(list);
-
-        // Pre-select current station if available, otherwise leave unselected
-        if (currentStationId) {
-          setSelectedStationId(String(currentStationId));
-        } else if (list.length > 0) {
-          // If unassigned, don't force a pre-selection to require deliberate choice
-          setSelectedStationId('');
-        }
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        setServerError(
-          err.response?.data?.error?.message || 'Failed to load fire stations. Please retry.'
-        );
-      })
-      .finally(() => {
-        if (isMounted) setStationsLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [open, currentStationId]);
+    loadStations();
+  }, [open, loadStations]);
 
   // Selected station object
   const selectedStation = useMemo(() => {
@@ -207,6 +209,10 @@ export default function AssignOverride({
       const envelope = await assignIncident(incident.id, { stationId: targetId });
 
       const updatedIncident = envelope?.data?.incident || envelope?.data || incident;
+      toast?.show({
+        type: 'success',
+        message: 'Station reassigned successfully.',
+      });
       if (onAssigned) {
         onAssigned(updatedIncident);
       }
@@ -214,19 +220,23 @@ export default function AssignOverride({
         onClose();
       }
     } catch (err) {
-      // Show server errors (409 no vehicle, 400 not assignable) inline per Requirement 3
-      const code = err.response?.data?.error?.code;
-      const message =
-        err.response?.data?.error?.message ||
-        err.message ||
-        'Failed to reassign station. Please check target station availability.';
-
-      if (err.response?.status === 409 || code === 'CONFLICT') {
-        setServerError(`409 Conflict: ${message}`);
-      } else if (err.response?.status === 400 || code === 'INVALID_TRANSITION') {
-        setServerError(`400 Bad Request: ${message}`);
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setServerError('Network connection failed. Please check your internet connection and retry.');
       } else {
-        setServerError(message);
+        // Show server errors (409 no vehicle, 400 not assignable) inline per Requirement 3
+        const code = err.response?.data?.error?.code;
+        const message =
+          err.response?.data?.error?.message ||
+          err.message ||
+          'Failed to reassign station. Please check target station availability.';
+
+        if (err.response?.status === 409 || code === 'CONFLICT') {
+          setServerError(`409 Conflict: ${message}`);
+        } else if (err.response?.status === 400 || code === 'INVALID_TRANSITION') {
+          setServerError(`400 Bad Request: ${message}`);
+        } else {
+          setServerError(message);
+        }
       }
     } finally {
       setSubmitting(false);
@@ -349,7 +359,21 @@ export default function AssignOverride({
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <div className={styles.errorText}>{serverError}</div>
+            <div className={styles.errorText}>
+              <p style={{ margin: 0 }}>{serverError}</p>
+              {stations.length === 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  onClick={loadStations}
+                  disabled={stationsLoading}
+                  style={{ marginTop: 'var(--space-2)' }}
+                >
+                  Retry loading stations
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -359,6 +383,11 @@ export default function AssignOverride({
             <div className={styles.loadingWrap}>
               <Skeleton lines={2} />
             </div>
+          ) : stations.length === 0 && !serverError ? (
+            <EmptyState
+              title="No stations available"
+              description="No active fire stations could be loaded at this time."
+            />
           ) : (
             <>
               <Select

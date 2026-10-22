@@ -129,7 +129,11 @@ export default function UserManagement() {
       }
       setUsers(list);
     } catch (err) {
-      setError(err.message || 'Failed to load users.');
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setError('Network connection failed. Please check your internet connection and retry.');
+      } else {
+        setError(err.message || 'Failed to load users.');
+      }
     } finally {
       setLoading(false);
     }
@@ -492,7 +496,7 @@ export default function UserManagement() {
         {error && !loading && (
           <Card variant="warm" className={styles.errorCard}>
             <p className={styles.errorMessage}>{error}</p>
-            <Button variant="ghost" size="md" onClick={fetchUsers}>
+            <Button variant="dark" size="md" onClick={fetchUsers}>
               Retry Loading Users
             </Button>
           </Card>

@@ -103,7 +103,11 @@ export default function MyReports() {
 
       setIncidents(list);
     } catch (err) {
-      setError(err.message || 'Failed to load your incident reports. Please try again.');
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setError('Network connection failed. Please check your internet connection and retry.');
+      } else {
+        setError(err.message || 'Failed to load your incident reports. Please try again.');
+      }
     } finally {
       setLoading(false);
       setIsRefreshing(false);

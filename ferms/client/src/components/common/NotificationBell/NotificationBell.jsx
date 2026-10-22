@@ -5,6 +5,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { useToast } from '../../ui/Toast/Toast';
 import Card from '../../ui/Card/Card';
+import Button from '../../ui/Button/Button';
+import Skeleton from '../../ui/Skeleton/Skeleton';
 import EmptyState from '../../ui/EmptyState/EmptyState';
 import styles from './NotificationBell.module.css';
 
@@ -77,8 +79,11 @@ export default function NotificationBell() {
   const {
     notifications,
     unreadCount,
+    loading,
+    error,
     markRead,
     markAllRead,
+    refetch,
   } = useNotifications({ onNewNotification: handleNewNotification });
 
   // 10 newest notifications
@@ -203,9 +208,27 @@ export default function NotificationBell() {
             )}
           </div>
 
-          {/* Notifications List or Empty State */}
+          {/* Notifications List, Loading Skeleton, Error with Retry, or Empty State */}
           <div className={styles.body}>
-            {newestNotifications.length === 0 ? (
+            {loading ? (
+              <div className={styles.skeletonWrap} aria-label="Loading notifications…">
+                <Skeleton lines={2} height={16} />
+                <Skeleton lines={2} height={16} />
+                <Skeleton lines={2} height={16} />
+              </div>
+            ) : error ? (
+              <div className={styles.errorWrap} role="alert">
+                <p className={styles.errorText}>Unable to load notifications.</p>
+                <Button
+                  type="button"
+                  variant="dark"
+                  size="sm"
+                  onClick={() => refetch()}
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : newestNotifications.length === 0 ? (
               <div className={styles.emptyContainer}>
                 <EmptyState
                   title="No notifications"

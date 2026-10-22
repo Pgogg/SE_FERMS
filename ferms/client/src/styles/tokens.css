@@ -37,11 +37,16 @@
   --st-resolved: #16A34A;
   --st-closed: #98A2B3;
 
+  /* Overlays & Borders */
+  --backdrop-overlay: rgba(17, 17, 17, 0.55);
+  --border-subtle-white: rgba(255, 255, 255, 0.08);
+
   /* Map Markers */
   --marker-pin-dark: var(--color-dark);
   --marker-station-border: rgba(255, 255, 255, 0.4);
   --marker-selected-ring: var(--color-brand);
   --marker-shadow: 0 4px 12px rgba(17, 17, 17, 0.25);
+  --marker-selected-shadow: 0 4px 14px rgba(17, 17, 17, 0.4);
 
   /* Typography */
   --font-display: 'Bebas Neue', 'Oswald', Impact, sans-serif;
@@ -53,8 +58,12 @@
   --radius-lg: 24px;
   --radius-pill: 999px;
 
-  /* Elevation */
+  /* Elevation & Shadows */
+  --shadow-sm: 0 1px 3px rgba(17, 17, 17, 0.1);
   --shadow-float: 0 8px 24px rgba(17, 17, 17, 0.08);
+  --shadow-modal: 0 24px 64px rgba(17, 17, 17, 0.18);
+  --shadow-brand-hover: 0 16px 40px rgba(255, 106, 0, 0.18);
+  --shadow-brand-glow: 0 8px 32px rgba(255, 106, 0, 0.12);
 
   /* Spacing scale */
   --space-1: 4px;

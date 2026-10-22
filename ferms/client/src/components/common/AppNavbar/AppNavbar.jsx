@@ -5,7 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import Button from '../../ui/Button/Button';
 import Badge from '../../ui/Badge/Badge';
-import logoUrl from '../../../assets/logo.svg';
+import logo from '../../../assets/ferms-logo.svg';
 import styles from './AppNavbar.module.css';
 
 const ROLE_LINKS = {
@@ -31,6 +31,20 @@ const ROLE_LINKS = {
     { to: '/admin/users', label: 'Users' },
   ],
 };
+
+function formatUserName(user) {
+  if (!user) return 'User';
+  const cleaned = user.name ? user.name.replace(/\bdemo\s*/gi, '').trim() : '';
+  if (cleaned) {
+    return cleaned;
+  }
+  if (user.role) {
+    return user.role
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return user.email || 'User';
+}
 
 export default function AppNavbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -66,9 +80,9 @@ export default function AppNavbar() {
     <header className={styles.wrapper}>
       <nav className={styles.navbar} aria-label="Main Navigation">
         {/* Left: Brand Logo */}
-        <Link to="/" className={styles.brand} aria-label="FERMS Home">
-          <img src={logoUrl} alt="" className={styles.logoImg} width="32" height="32" />
-          <span className={styles.brandText}>FERMS</span>
+        <Link to="/" className={styles.brand}>
+          <img src={logo} alt="" width={28} height={28} />
+          <span>FERMS</span>
         </Link>
 
         {/* Center: Desktop Role-Based Links */}
@@ -113,7 +127,7 @@ export default function AppNavbar() {
             <div className={styles.userSection}>
               <NotificationBell />
               <div className={styles.userInfo}>
-                <span className={styles.userName}>{user?.name || user?.email || 'User'}</span>
+                <span className={styles.userName}>{formatUserName(user)}</span>
                 {user?.role && <Badge variant="role" value={user.role} />}
               </div>
               <Button
@@ -174,8 +188,8 @@ export default function AppNavbar() {
           >
             <div className={styles.drawerHeader}>
               <div className={styles.brand}>
-                <img src={logoUrl} alt="" className={styles.logoImg} width="28" height="28" />
-                <span className={styles.brandText}>FERMS</span>
+                <img src={logo} alt="" width={28} height={28} />
+                <span>FERMS</span>
               </div>
               <button
                 type="button"
@@ -193,7 +207,7 @@ export default function AppNavbar() {
               {isAuthenticated ? (
                 <>
                   <div className={styles.drawerUserInfo}>
-                    <span className={styles.userName}>{user.name || user.email}</span>
+                    <span className={styles.userName}>{formatUserName(user)}</span>
                     {user.role && <Badge variant="role" value={user.role} />}
                   </div>
                   <hr className={styles.drawerDivider} />

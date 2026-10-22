@@ -232,5 +232,5 @@
 }
 
 .confirmDeactivateBtn:hover {
-  background-color: #b91c1c;
+  background-color: color-mix(in srgb, var(--sev-critical) 85%, var(--color-ink));
 }

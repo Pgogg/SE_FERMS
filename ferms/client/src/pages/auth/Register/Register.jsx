@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext.jsx';
+import { useToast } from '../../../components/ui/Toast/Toast.jsx';
 import { ROLE_HOME } from '../../../constants.js';
 import Card from '../../../components/ui/Card/Card.jsx';
 import FormField from '../../../components/ui/FormField/FormField.jsx';
@@ -12,6 +13,7 @@ import logoUrl from '../../../assets/logo.svg';
 
 export default function Register() {
   const { register, isAuthenticated, user, loading } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -81,11 +83,19 @@ export default function Register() {
         password,
       });
 
+      toast?.show({
+        type: 'success',
+        message: 'Account created successfully. Welcome to FERMS.',
+      });
+
       // After successful registration, log user in and go to /report
       navigate('/report', { replace: true });
     } catch (err) {
-      // Display server error inline (e.g. "Email is already registered.")
-      setServerError(err.message || 'Registration failed. Please try again.');
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setServerError('Network connection failed. Please check your internet connection and try again.');
+      } else {
+        setServerError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setBusy(false);
     }

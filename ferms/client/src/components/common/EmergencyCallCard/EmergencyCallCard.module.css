@@ -7,7 +7,7 @@
   padding: var(--space-5);
   border-radius: var(--radius-md);
   background: var(--color-dark);
-  color: #ffffff;
+  color: var(--color-bg);
 }
 
 /* Orange circle icon */
@@ -20,7 +20,7 @@
   height: 52px;
   border-radius: 50%;
   background: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 /* Text column */
@@ -35,7 +35,7 @@
   font-family: var(--font-body);
   font-size: 1.05rem;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--color-bg);
   line-height: 1.4;
 }
 

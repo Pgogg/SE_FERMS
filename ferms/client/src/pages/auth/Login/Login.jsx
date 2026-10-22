@@ -1,7 +1,8 @@
-// pages/auth/Login/Login.jsx — Login page with split layout: form card + dark panel per §14.7
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext.jsx';
+import { useToast } from '../../../components/ui/Toast/Toast.jsx';
 import { ROLE_HOME } from '../../../constants.js';
 import Card from '../../../components/ui/Card/Card.jsx';
 import FormField from '../../../components/ui/FormField/FormField.jsx';
@@ -12,12 +13,32 @@ import logoUrl from '../../../assets/logo.svg';
 
 export default function Login() {
   const { login, isAuthenticated, user, loading } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [expiredNotice, setExpiredNotice] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem('ferms_session_expired');
+      if (stored) {
+        sessionStorage.removeItem('ferms_session_expired');
+        return stored;
+      }
+    } catch {
+      // ignore storage error
+    }
+    if (location.state?.message) {
+      return location.state.message;
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired')) {
+      return 'Your session has expired. Please log in again.';
+    }
+    return '';
+  });
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -55,13 +76,20 @@ export default function Login() {
     setBusy(true);
     try {
       const loggedInUser = await login(email.trim(), password);
+      toast?.show({
+        type: 'success',
+        message: 'Signed in successfully.',
+      });
       // Navigate to remembered location (set by ProtectedRoute) or ROLE_HOME
       const from = location.state?.from?.pathname || location.state?.from;
       const home = ROLE_HOME[loggedInUser.role] ?? '/';
       navigate(from || home, { replace: true });
     } catch (err) {
-      // Show server error message ('Invalid email or password') inline
-      setError(err.message || 'Invalid email or password');
+      if (!navigator.onLine || err.code === 'NETWORK_ERROR' || /network/i.test(err.message)) {
+        setError('Network connection failed. Please check your internet connection and try again.');
+      } else {
+        setError(err.message || 'Invalid email or password.');
+      }
     } finally {
       setBusy(false);
     }
@@ -102,6 +130,13 @@ export default function Login() {
                 </Link>
               </p>
             </div>
+
+            {expiredNotice && (
+              <div className={styles.infoBanner} role="status">
+                <AlertCircle size={18} aria-hidden="true" />
+                <span>{expiredNotice}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} noValidate className={styles.form}>
               {/* Inline server error banner */}

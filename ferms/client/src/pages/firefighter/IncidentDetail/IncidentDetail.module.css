@@ -443,6 +443,15 @@
   border-radius: var(--radius-sm);
 }
 
+/* ── Empty message (no data yet) ── */
+.emptyMsg {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
 /* ── Error / loading ── */
 .errorCard {
   padding: var(--space-5);
