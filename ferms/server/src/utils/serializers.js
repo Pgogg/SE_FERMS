@@ -51,4 +51,33 @@ const serializeUser = (user) => {
   return plain;
 };
 
-module.exports = { serializeIncident, serializeUser };
+/**
+ * serializeIncidentWithVehicles
+ * Same as serializeIncident but also includes the `vehicles` array
+ * built from eager-loaded incidentVehicles (IncidentVehicle → Vehicle).
+ *
+ * @param {object} incident  Sequelize Incident instance with incidentVehicles included
+ * @returns {object}
+ */
+const serializeIncidentWithVehicles = (incident) => {
+  const base = serializeIncident(incident);
+
+  // BelongsToMany: incident.vehicles is array of Vehicle instances,
+  // each with junction data at vehicle.IncidentVehicle
+  const vehicleRows = incident.vehicles || [];
+  const vehicles = vehicleRows.map((v) => {
+    const junction = v.IncidentVehicle || v.incidentVehicle || {};
+    return {
+      id:             v.id,
+      type:           v.type           ?? null,
+      registrationNo: v.registrationNo ?? null,
+      status:         v.status         ?? null,
+      assignedAt:     junction.assignedAt  ?? junction.assigned_at  ?? null,
+      releasedAt:     junction.releasedAt  ?? junction.released_at  ?? null,
+    };
+  });
+
+  return { ...base, vehicles };
+};
+
+module.exports = { serializeIncident, serializeIncidentWithVehicles, serializeUser };

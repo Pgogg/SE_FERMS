@@ -13,7 +13,7 @@ const {
   sequelize,
 } = require('../models');
 const { AppError } = require('../middleware/error.middleware');
-const { serializeIncident } = require('../utils/serializers');
+const { serializeIncident, serializeIncidentWithVehicles } = require('../utils/serializers');
 const { ROLES, INCIDENT_STATUS, SEVERITY, NOTIFICATION_TYPE } = require('../domain/constants');
 const asyncHandler = require('../utils/asyncHandler');
 const dispatchService = require('../services/dispatch.service');
@@ -172,12 +172,20 @@ const createIncident = asyncHandler(async (req, res) => {
 const myIncidents = asyncHandler(async (req, res) => {
   const incidents = await Incident.findAll({
     where:   { reporterId: req.user.id },
-    include: [{ model: Station, as: 'station', attributes: ['id', 'name'] }],
+    include: [
+      { model: Station, as: 'station', attributes: ['id', 'name'] },
+      {
+        model: Vehicle,
+        as: 'vehicles',
+        attributes: ['id', 'type', 'registrationNo', 'status'],
+        through: { attributes: ['assignedAt', 'releasedAt'] },
+      },
+    ],
     order:   [['createdAt', 'DESC']],
   });
 
   return res.json({
-    data: incidents.map(serializeIncident),
+    data: incidents.map(serializeIncidentWithVehicles),
     meta: { count: incidents.length },
   });
 });
@@ -340,6 +348,12 @@ const listIncidents = async (req, res) => {
         as: 'station',
         attributes: ['id', 'name'],
       },
+      {
+        model: Vehicle,
+        as: 'vehicles',
+        attributes: ['id', 'type', 'registrationNo', 'status'],
+        through: { attributes: ['assignedAt', 'releasedAt'] },
+      },
     ],
     order: [['createdAt', 'DESC']],
     limit: 200,
@@ -347,7 +361,7 @@ const listIncidents = async (req, res) => {
 
   const data = incidents.map((inc) => {
     inc.Station = inc.station || inc.Station;
-    return serializeIncident(inc);
+    return serializeIncidentWithVehicles(inc);
   });
 
   return res.json({
@@ -433,13 +447,19 @@ const assignedIncidents = async (req, res) => {
         as: 'station',
         attributes: ['id', 'name'],
       },
+      {
+        model: Vehicle,
+        as: 'vehicles',
+        attributes: ['id', 'type', 'registrationNo', 'status'],
+        through: { attributes: ['assignedAt', 'releasedAt'] },
+      },
     ],
     order: [['createdAt', 'DESC']],
   });
 
   const data = incidents.map((inc) => {
     inc.Station = inc.station || inc.Station;
-    return serializeIncident(inc);
+    return serializeIncidentWithVehicles(inc);
   });
 
   return res.json({
